@@ -30,7 +30,25 @@
 
   --tint:rgba(10,30,40,.30);
   --glow:.55;
+
+  /* accent wash — retinted per scene mode below */
+  --accent-wash:rgba(255,180,84,.14);
+  --accent-line:rgba(255,180,84,.45);
 }
+/* per-scene accent + light identity */
+body.mode-bird{--sodium:#f4c95d;--sodium-soft:#ffe6ad;--glass-deep:#0c130a;
+  --accent-wash:rgba(244,201,93,.16);--accent-line:rgba(244,201,93,.48)}
+body.mode-jungle{--sodium:#8ad38f;--sodium-soft:#c8efcb;--glass-deep:#06120b;
+  --accent-wash:rgba(138,211,143,.16);--accent-line:rgba(138,211,143,.48)}
+/* the room reskins with the scene */
+body.mode-bird .panel{background:linear-gradient(180deg,rgba(20,28,18,.95),rgba(9,14,8,.99))}
+body.mode-jungle .panel{background:linear-gradient(180deg,rgba(9,24,16,.96),rgba(4,11,8,.99))}
+body.mode-bird .scene,body.mode-bird .board{background-color:#0d1409}
+body.mode-jungle .scene,body.mode-jungle .board{background-color:#06120b}
+body.mode-bird .board{border-color:#3c4a2a}
+body.mode-jungle .board{border-color:#233a26}
+body.mode-bird .timer{background:radial-gradient(125% 95% at 50% 0%,rgba(244,201,93,.10),transparent 72%)}
+body.mode-jungle .timer{background:radial-gradient(125% 95% at 50% 0%,rgba(138,211,143,.10),transparent 72%)}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -74,6 +92,17 @@ body{
 .sill{position:absolute;left:0;right:0;bottom:0;height:25%;
   background:linear-gradient(180deg,#12262e 0%,#0a171d 38%,#060f13 100%);
   border-top:1px solid rgba(255,180,84,.20)}
+/* each scene brings its own windowsill objects + room colour */
+.still-set{display:none}
+body.mode-cafe   .still-set.for-cafe,
+body.mode-bird   .still-set.for-bird,
+body.mode-jungle .still-set.for-jungle{display:inline}
+.steam{display:none}
+body.mode-cafe .steam{display:block}
+body.mode-bird .sill{background:linear-gradient(180deg,#27311f 0%,#171e12 40%,#0b1108 100%);
+  border-top-color:rgba(244,201,93,.38)}
+body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,#05100a 100%);
+  border-top-color:rgba(138,211,143,.32)}
 .still{position:absolute;left:0;right:0;bottom:-2px;width:100%;display:block}
 .steam{position:absolute;pointer-events:none;filter:url(#wisp)}
 .steam ellipse{fill:rgba(255,236,210,.30);animation:rise 7s ease-in-out infinite}
@@ -112,6 +141,59 @@ body{
   background:transparent;color:var(--rose);font-size:15px;cursor:pointer;transition:.25s}
 .iconbtn:hover{background:rgba(232,145,140,.12);border-color:rgba(232,145,140,.42)}
 
+/* ── Scene switcher — floats on the window itself ── */
+.modes{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:25;
+  display:flex;gap:5px;padding:5px;border-radius:16px;
+  background:rgba(6,14,18,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(243,233,219,.18);box-shadow:0 12px 34px rgba(0,0,0,.45)}
+.mode{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border-radius:11px;
+  border:1px solid transparent;background:rgba(243,233,219,.06);color:var(--milk);cursor:pointer;
+  font-family:var(--body);font-size:13px;letter-spacing:.02em;transition:.2s;white-space:nowrap}
+.mode .ico{font-size:16px;line-height:1;filter:saturate(1.1)}
+.mode:hover{color:#fff;background:rgba(243,233,219,.14);border-color:rgba(243,233,219,.25)}
+.mode[aria-pressed="true"]{background:var(--accent-wash);color:var(--sodium-soft);
+  border-color:var(--accent-line);box-shadow:inset 0 0 0 1px var(--accent-line),0 0 18px -3px var(--accent-line)}
+
+/* full-window toggle — hides the whole control sidebar */
+.fsbtn{position:absolute;top:18px;right:18px;z-index:25;width:40px;height:40px;border-radius:12px;
+  display:grid;place-items:center;cursor:pointer;font-size:17px;color:var(--sodium-soft);
+  background:rgba(6,14,18,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--accent-line);box-shadow:0 12px 34px rgba(0,0,0,.45),0 0 16px -4px var(--accent-line);transition:.2s}
+.fsbtn:hover{color:#fff;background:var(--accent-wash);border-color:var(--sodium);
+  box-shadow:0 12px 34px rgba(0,0,0,.45),0 0 22px -2px var(--accent-line)}
+.fsbtn[aria-pressed="true"]{background:var(--accent-wash);color:var(--sodium-soft)}
+
+/* video scene background + empty-state hint */
+.scenevid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#060f14;z-index:0;
+  opacity:1;transition:opacity .45s ease}
+.scenevid.loading{opacity:0}
+.scene-loader{position:absolute;top:50%;left:50%;width:46px;height:46px;margin:-23px 0 0 -23px;z-index:2;
+  border-radius:50%;border:3px solid rgba(243,233,219,.16);border-top-color:var(--sodium);
+  animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.scene-loader{animation:none;border-top-color:rgba(243,233,219,.5)}}
+.scenehint{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:12px;padding:9% 10%;color:var(--fog);background:radial-gradient(120% 90% at 50% 40%,#0c1a20,#060f13)}
+.scenehint .chalk{font-family:var(--display);font-size:clamp(18px,2.4vw,24px);color:var(--milk)}
+.scenehint p{margin:0;max-width:46ch;font-size:13px;line-height:1.65}
+.scenehint code{font-family:var(--mono);font-size:12px;color:var(--sodium-soft);
+  background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px}
+
+/* scene picker — sits just under the mode switcher */
+.scenes{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:25;
+  display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:min(88%,560px)}
+.scene-chip{padding:6px 13px;border-radius:20px;cursor:pointer;white-space:nowrap;
+  border:1px solid rgba(243,233,219,.18);background:rgba(6,14,18,.6);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  color:var(--fog);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;transition:.2s}
+.scene-chip:hover{color:var(--milk);border-color:rgba(243,233,219,.34)}
+.scene-chip[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent-line);
+  color:var(--sodium-soft);box-shadow:0 0 14px -4px var(--accent-line)}
+body.solo{overflow:hidden}
+body.solo .shell{grid-template-columns:1fr;height:100dvh}
+body.solo .panel{display:none}
+body.solo .scene{height:100dvh}
+
 .timer{border:1px solid var(--line);border-radius:18px;padding:24px 22px 20px;text-align:center;
   background:radial-gradient(125% 95% at 50% 0%,rgba(255,180,84,.10),transparent 72%)}
 .phase{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--sodium)}
@@ -125,13 +207,16 @@ body{
 .btn{flex:1;padding:12px 14px;border-radius:11px;cursor:pointer;font-family:var(--body);font-size:13.5px;
   border:1px solid var(--line);background:transparent;color:var(--milk);transition:.2s}
 .btn:hover{border-color:rgba(243,233,219,.34);background:rgba(243,233,219,.05)}
-.btn.primary{background:var(--sodium);border-color:var(--sodium);color:#2b1706;font-weight:600}
-.btn.primary:hover{background:var(--sodium-soft);border-color:var(--sodium-soft)}
+.btn.primary{background:var(--sodium);border-color:var(--sodium);color:#2b1706;font-weight:600;
+  box-shadow:0 6px 22px -6px var(--sodium)}
+.btn.primary:hover{background:var(--sodium-soft);border-color:var(--sodium-soft);
+  box-shadow:0 8px 28px -6px var(--sodium-soft)}
 .lengths{display:flex;gap:8px;justify-content:center;margin-top:14px}
 .chip{padding:6px 12px;border-radius:20px;background:transparent;cursor:pointer;border:1px solid var(--line);
   color:var(--fog);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;transition:.2s}
 .chip:hover{color:var(--milk)}
-.chip[aria-pressed="true"]{background:rgba(255,180,84,.14);border-color:rgba(255,180,84,.45);color:var(--sodium-soft)}
+.chip[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent-line);color:var(--sodium-soft);
+  box-shadow:0 0 14px -4px var(--accent-line)}
 
 .sec{border-top:1px solid var(--line);padding-top:20px}
 .sec h2{margin:0 0 14px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;
@@ -233,110 +318,26 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
 <div class="shell">
 
   <!-- ═══ The window ═══ -->
-  <section class="scene" aria-hidden="true">
-    <canvas id="glassCanvas"></canvas>
+  <section class="scene">
+    <div class="modes" id="modes" role="group" aria-label="Choose a scene">
+      <button class="mode" data-mode="cafe" aria-pressed="true"><span class="ico">☕</span>Café</button>
+      <button class="mode" data-mode="bird" aria-pressed="false"><span class="ico">🐦</span>Bird</button>
+      <button class="mode" data-mode="jungle" aria-pressed="false"><span class="ico">🌿</span>Jungle</button>
+    </div>
+    <div class="scenes" id="scenes" role="group" aria-label="Choose a scene view"></div>
+    <button class="fsbtn" id="fsBtn" title="Full window" aria-label="Hide controls for a full-window view" aria-pressed="false">⛶</button>
+    <video id="sceneVideo" class="scenevid" autoplay loop muted playsinline aria-hidden="true"></video>
+    <div class="scene-loader" id="sceneLoader" hidden aria-hidden="true"></div>
+    <div class="scenehint" id="sceneHint" hidden>
+      <div class="chalk">No scene video yet</div>
+      <p>Set <code>R2_BASE</code> to your bucket's public URL and list the video filenames in the <code>SCENES</code> config, and each scene will loop here.</p>
+    </div>
     <div class="tint"></div>
     <div class="lamp"></div>
     <div class="fog"></div>
     <div class="vignette"></div>
     <svg class="grain"><rect width="100%" height="100%" filter="url(#grainF)"/></svg>
 
-    <div class="sill">
-      <svg class="still" viewBox="0 0 900 230" preserveAspectRatio="xMidYMax meet">
-        <defs>
-          <linearGradient id="ceramic" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#4a4238"/><stop offset=".16" stop-color="#efe6d6"/>
-            <stop offset=".55" stop-color="#fbf5ea"/><stop offset=".82" stop-color="#cbbda9"/>
-            <stop offset="1" stop-color="#8a7864"/>
-          </linearGradient>
-          <linearGradient id="saucer" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#6d6255"/><stop offset=".3" stop-color="#efe6d6"/>
-            <stop offset=".7" stop-color="#d5c9b6"/><stop offset="1" stop-color="#7b6c5c"/>
-          </linearGradient>
-          <radialGradient id="coffee" cx=".38" cy=".3" r=".8">
-            <stop offset="0" stop-color="#6b4326"/><stop offset=".5" stop-color="#3d2414"/>
-            <stop offset="1" stop-color="#21120a"/>
-          </radialGradient>
-          <linearGradient id="pot" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#31241c"/><stop offset=".3" stop-color="#7c5a41"/>
-            <stop offset=".7" stop-color="#5c4230"/><stop offset="1" stop-color="#241a13"/>
-          </linearGradient>
-          <linearGradient id="leafA" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0" stop-color="#2f5b41"/><stop offset="1" stop-color="#79a97f"/>
-          </linearGradient>
-          <linearGradient id="leafB" x1="1" y1="1" x2="0" y2="0">
-            <stop offset="0" stop-color="#27503a"/><stop offset="1" stop-color="#5f9169"/>
-          </linearGradient>
-          <linearGradient id="bookA" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#1b3a44"/><stop offset=".5" stop-color="#2f5f6d"/><stop offset="1" stop-color="#15303a"/>
-          </linearGradient>
-          <linearGradient id="bookB" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#4a2a1c"/><stop offset=".5" stop-color="#7b4a2e"/><stop offset="1" stop-color="#3a2015"/>
-          </linearGradient>
-          <linearGradient id="bookC" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#5c4520"/><stop offset=".5" stop-color="#93743a"/><stop offset="1" stop-color="#4a3719"/>
-          </linearGradient>
-          <radialGradient id="contact" cx=".5" cy=".5" r=".5">
-            <stop offset="0" stop-color="rgba(0,0,0,.55)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/>
-          </radialGradient>
-        </defs>
-
-        <!-- contact shadows -->
-        <ellipse cx="430" cy="186" rx="110" ry="16" fill="url(#contact)"/>
-        <ellipse cx="168" cy="180" rx="105" ry="13" fill="url(#contact)"/>
-        <ellipse cx="742" cy="188" rx="95" ry="14" fill="url(#contact)"/>
-
-        <!-- books -->
-        <g>
-          <rect x="88" y="160" width="162" height="18" rx="3" fill="url(#bookA)"/>
-          <rect x="92" y="163" width="154" height="4" rx="2" fill="rgba(240,232,214,.5)"/>
-          <rect x="97" y="142" width="146" height="17" rx="3" fill="url(#bookB)"/>
-          <rect x="101" y="145" width="138" height="3.5" rx="2" fill="rgba(240,232,214,.42)"/>
-          <rect x="108" y="125" width="128" height="16" rx="3" fill="url(#bookC)"/>
-          <rect x="112" y="128" width="120" height="3" rx="2" fill="rgba(240,232,214,.38)"/>
-          <rect x="236" y="126" width="4" height="52" fill="rgba(255,190,120,.16)"/>
-        </g>
-
-        <!-- cup + saucer -->
-        <g>
-          <ellipse cx="430" cy="176" rx="78" ry="13" fill="url(#saucer)"/>
-          <ellipse cx="430" cy="173" rx="78" ry="12" fill="#efe6d6"/>
-          <ellipse cx="430" cy="171" rx="62" ry="9" fill="#c9bca8"/>
-          <ellipse cx="430" cy="170" rx="52" ry="7" fill="#ded2bf"/>
-          <path d="M470 112 a30 26 0 0 1 6 46 l-6 -9 a20 17 0 0 0 -4 -30 z" fill="#e6dbc9"/>
-          <path d="M386 108 h88 l-11 50 a34 30 0 0 1 -66 0 z" fill="url(#ceramic)"/>
-          <ellipse cx="430" cy="108" rx="44" ry="8" fill="#efe6d6"/>
-          <ellipse cx="430" cy="109" rx="38" ry="6.4" fill="url(#coffee)"/>
-          <ellipse cx="418" cy="107.5" rx="12" ry="2" fill="rgba(255,220,175,.28)"/>
-          <path d="M394 122 q6 26 16 34" stroke="rgba(255,255,255,.5)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
-          <path d="M462 124 q-3 22 -10 30" stroke="rgba(255,180,84,.35)" stroke-width="3" fill="none" stroke-linecap="round"/>
-        </g>
-
-        <!-- plant -->
-        <g>
-          <path d="M706 178 h74 l-8 -46 h-58 z" fill="url(#pot)"/>
-          <rect x="700" y="122" width="86" height="15" rx="4" fill="#8a6446"/>
-          <rect x="700" y="122" width="86" height="5" rx="3" fill="rgba(255,205,150,.25)"/>
-          <g>
-            <path d="M743 124 c-32 -8 -50 -34 -47 -62 28 5 47 28 47 62z" fill="url(#leafA)"/>
-            <path d="M743 124 c32 -12 47 -41 42 -68 -28 7 -45 32 -42 68z" fill="url(#leafB)"/>
-            <path d="M743 124 c-9 -28 3 -60 22 -77 11 26 4 58 -22 77z" fill="url(#leafA)"/>
-            <path d="M743 124 c15 -24 9 -56 -9 -73 -13 24 -11 54 9 73z" fill="url(#leafB)"/>
-            <path d="M743 124 c-24 -16 -30 -44 -20 -66 17 14 26 42 20 66z" fill="url(#leafA)" opacity=".9"/>
-            <g stroke="rgba(20,45,32,.5)" stroke-width="1.4" fill="none">
-              <path d="M743 124 q-22 -22 -30 -50"/><path d="M743 124 q22 -26 28 -54"/><path d="M743 124 q-3 -32 12 -60"/>
-            </g>
-          </g>
-        </g>
-      </svg>
-
-      <svg class="steam" style="left:44.5%;bottom:60%;width:96px;height:90px" viewBox="0 0 60 60">
-        <ellipse cx="22" cy="46" rx="8" ry="11"/>
-        <ellipse cx="32" cy="48" rx="7" ry="10"/>
-        <ellipse cx="27" cy="44" rx="9" ry="12"/>
-        <ellipse cx="36" cy="45" rx="6" ry="9"/>
-      </svg>
-    </div>
 
     <div class="frame">
       <div class="bar v"></div>
@@ -383,7 +384,7 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
     </div>
 
     <div class="sec">
-      <h2>The café sound <span id="soundState">off</span></h2>
+      <h2>The sound <span id="soundState">off</span></h2>
       <div class="presets" id="presets">
         <button class="chip" data-preset="rain">RAINY WINDOW</button>
         <button class="chip" data-preset="cafe">BUSY CAFÉ</button>
@@ -424,262 +425,158 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
 
 <script>
 /* ══════════════════════════════════════════════════
-   1. THE GLASS — a live rain-on-window simulation
-      Droplets act as lenses: each one samples the
-      sharp street behind it while everything else
-      stays out of focus. They grow, slide, leave
-      trails, and swallow the drops they pass.
+   1. THE SCENES — one looping video per scene, grouped
+      by mode. Ladoo picks a scene under the current mode
+      and the clip loops as the view outside the window.
+
+      TO WIRE UP REAL VIDEOS:
+        1. Give the studybuddy R2 bucket a public URL
+           (enable its r2.dev URL or attach a custom
+           domain) and paste it into R2_BASE below.
+        2. List each scene's video filename (object key)
+           under SCENES. Nothing else to change.
    ══════════════════════════════════════════════════ */
-const Glass = (function(){
-  const cv = document.getElementById('glassCanvas');
-  const ctx = cv.getContext('2d');
-  const bg = document.createElement('canvas');       // sharp street
-  const bgc = bg.getContext('2d');
-  const soft = document.createElement('canvas');     // pre-blurred street
-  const sc = soft.getContext('2d');
-  let W = 0, H = 0, dpr = 1;
-  let drops = [], streaks = [];
-  let intensity = 1, raf = null, last = 0;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const R2_BASE = 'https://pub-8b10b2b9672041afa1db15de8815b6bc.r2.dev/';   // studybuddy bucket public URL
 
-  // deterministic noise so a resize doesn't reshuffle the city
-  let seed = 20260810;
-  function rnd(){ seed = (seed*1664525 + 1013904223) % 4294967296; return seed/4294967296; }
-
-  function drawStreet(w,h){
-    seed = 20260810;
-    const g = bgc.createLinearGradient(0,0,0,h);
-    g.addColorStop(0,'#050d14'); g.addColorStop(.42,'#0b2029'); g.addColorStop(1,'#123039');
-    bgc.fillStyle = g; bgc.fillRect(0,0,w,h);
-
-    // far skyline
-    for(let layer=0; layer<3; layer++){
-      const base = h*(0.52 + layer*0.09);
-      const shade = ['#07141b','#0a1c24','#0d242d'][layer];
-      let x = -40;
-      while(x < w+40){
-        const bw = 40 + rnd()*90, bh = (60 + rnd()*170) * (1 - layer*0.16);
-        bgc.fillStyle = shade;
-        bgc.fillRect(x, base-bh, bw, bh+10);
-        // lit windows
-        const cols = Math.max(1, Math.floor(bw/16)), rows = Math.max(1, Math.floor(bh/20));
-        for(let i=0;i<cols;i++) for(let j=0;j<rows;j++){
-          if(rnd() > 0.55 - layer*0.12) continue;
-          const warm = rnd();
-          bgc.fillStyle = warm > .72 ? 'rgba(255,208,140,.85)'
-                        : warm > .34 ? 'rgba(255,178,92,.72)'
-                                     : 'rgba(150,205,220,.55)';
-          bgc.fillRect(x + 6 + i*16, base-bh + 10 + j*20, 6, 9);
-        }
-        x += bw + 6 + rnd()*22;
-      }
-    }
-
-    // street lamps + their haze
-    const lampY = h*0.70;
-    for(let i=0;i<6;i++){
-      const lx = (i+0.5)*(w/6) + (rnd()-0.5)*40;
-      const rg = bgc.createRadialGradient(lx, lampY, 2, lx, lampY, 120);
-      rg.addColorStop(0,'rgba(255,196,118,.95)');
-      rg.addColorStop(.16,'rgba(255,170,80,.42)');
-      rg.addColorStop(1,'rgba(255,150,60,0)');
-      bgc.fillStyle = rg; bgc.beginPath(); bgc.arc(lx, lampY, 120, 0, 7); bgc.fill();
-      bgc.fillStyle = 'rgba(255,225,180,1)';
-      bgc.beginPath(); bgc.arc(lx, lampY, 5, 0, 7); bgc.fill();
-      // wet reflection on the road
-      const rf = bgc.createLinearGradient(lx, lampY, lx, h);
-      rf.addColorStop(0,'rgba(255,175,85,.34)'); rf.addColorStop(1,'rgba(255,150,60,0)');
-      bgc.fillStyle = rf;
-      bgc.fillRect(lx-13, lampY, 26, h-lampY);
-    }
-    // road
-    const road = bgc.createLinearGradient(0,h*0.78,0,h);
-    road.addColorStop(0,'rgba(6,16,20,.55)'); road.addColorStop(1,'rgba(4,10,13,.9)');
-    bgc.fillStyle = road; bgc.fillRect(0,h*0.78,w,h*0.22);
-
-    // one distant traffic light, because a street always has one
-    const tx = w*0.82, ty = h*0.58;
-    ['rgba(230,80,70,.9)','rgba(255,190,90,.9)','rgba(110,210,140,.9)'].forEach((c,i)=>{
-      const rg = bgc.createRadialGradient(tx, ty+i*22, 1, tx, ty+i*22, 26);
-      rg.addColorStop(0,c); rg.addColorStop(1,'rgba(0,0,0,0)');
-      bgc.fillStyle = rg; bgc.beginPath(); bgc.arc(tx, ty+i*22, 26, 0, 7); bgc.fill();
-    });
-  }
-
-  // blur by downscaling and back up — works everywhere, costs nothing after setup
-  function blurStreet(w,h){
-    const f = 14;
-    const tmp = document.createElement('canvas');
-    tmp.width = Math.max(1, w/f|0); tmp.height = Math.max(1, h/f|0);
-    const t = tmp.getContext('2d');
-    t.drawImage(bg, 0, 0, tmp.width, tmp.height);
-    sc.clearRect(0,0,w,h);
-    sc.imageSmoothingEnabled = true; sc.imageSmoothingQuality = 'high';
-    sc.drawImage(tmp, 0, 0, tmp.width, tmp.height, -f, -f, w+f*2, h+f*2);
-  }
-
-  function resize(){
-    const r = cv.getBoundingClientRect();
-    if(!r.width || !r.height) return;
-    dpr = Math.min(2, window.devicePixelRatio || 1);
-    W = r.width; H = r.height;
-    [cv, bg, soft].forEach(c => { c.width = W*dpr; c.height = H*dpr; });
-    [ctx, bgc, sc].forEach(c => c.setTransform(dpr,0,0,dpr,0,0));
-    drawStreet(W,H); blurStreet(W,H);
-    drops = []; streaks = [];
-    for(let i=0;i<120;i++) drops.push(newDrop(true));
-    for(let i=0;i<90;i++) streaks.push(newStreak(true));
-  }
-
-  function newDrop(seedIn){
-    const big = Math.random() < 0.14;
-    return {
-      x: Math.random()*W,
-      y: seedIn ? Math.random()*H : Math.random()*H*0.35,
-      r: big ? 5 + Math.random()*7 : 1.2 + Math.random()*3.2,
-      vy: 0, sliding: false, life: 0
-    };
-  }
-  function newStreak(seedIn){
-    return {
-      x: Math.random()*W,
-      y: seedIn ? Math.random()*H : -40,
-      len: 24 + Math.random()*60,
-      sp: 620 + Math.random()*820,
-      a: 0.10 + Math.random()*0.30,
-      w: Math.random() < .3 ? 1.4 : 0.9
-    };
-  }
-
-  function paintDrop(d){
-    const r = d.r;
-    if(r < 0.6) return;
-    // tiny drops are just wet specks — cheap to draw, and they read the same
-    if(r < 2.2){
-      ctx.beginPath(); ctx.arc(d.x, d.y, r, 0, 7);
-      ctx.fillStyle = 'rgba(226,244,250,.16)'; ctx.fill();
-      ctx.beginPath(); ctx.arc(d.x - r*0.3, d.y - r*0.35, r*0.42, 0, 7);
-      ctx.fillStyle = 'rgba(255,255,255,.34)'; ctx.fill();
-      return;
-    }
-    ctx.save();
-    ctx.beginPath(); ctx.arc(d.x, d.y, r, 0, 7); ctx.closePath(); ctx.clip();
-    // refraction: the world inside a droplet is sharp, magnified and inverted
-    const s = r * 2.6;
-    const sx = Math.max(0, Math.min(W - s, d.x - s/2));
-    const sy = Math.max(0, Math.min(H - s, d.y - s/2 + r*0.6));
-    ctx.translate(d.x, d.y); ctx.rotate(Math.PI);
-    ctx.drawImage(bg, sx*dpr, sy*dpr, s*dpr, s*dpr, -r*1.08, -r*1.08, r*2.16, r*2.16);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    // body shading
-    const gr = ctx.createRadialGradient(d.x - r*0.35, d.y - r*0.4, r*0.1, d.x, d.y, r);
-    gr.addColorStop(0,'rgba(255,255,255,.30)');
-    gr.addColorStop(.55,'rgba(255,255,255,.03)');
-    gr.addColorStop(.92,'rgba(0,0,0,.20)');
-    gr.addColorStop(1,'rgba(0,0,0,.34)');
-    ctx.fillStyle = gr; ctx.fillRect(d.x-r, d.y-r, r*2, r*2);
-    ctx.restore();
-    // specular highlight
-    if(r > 2.2){
-      ctx.beginPath();
-      ctx.ellipse(d.x - r*0.34, d.y - r*0.42, r*0.24, r*0.17, -0.5, 0, 7);
-      ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill();
-    }
-    // rim
-    ctx.beginPath(); ctx.arc(d.x, d.y, r, 0, 7);
-    ctx.strokeStyle = 'rgba(210,240,250,.22)'; ctx.lineWidth = Math.max(.5, r*0.09); ctx.stroke();
-  }
-
-  function step(dt){
-    // falling rain behind the glass
-    ctx.drawImage(soft, 0, 0, W, H);
-    ctx.save();
-    ctx.lineCap = 'round';
-    for(const s of streaks){
-      s.y += s.sp * dt * (0.5 + intensity*0.8);
-      if(s.y - s.len > H){ Object.assign(s, newStreak(false)); }
-      ctx.strokeStyle = `rgba(206,235,245,${(s.a*intensity).toFixed(3)})`;
-      ctx.lineWidth = s.w;
-      ctx.beginPath(); ctx.moveTo(s.x, s.y - s.len); ctx.lineTo(s.x, s.y); ctx.stroke();
-    }
-    ctx.restore();
-
-    // droplets on the glass
-    const sliders = [];
-    for(const d of drops){
-      d.life += dt;
-      // slowly gather more water
-      if(!d.sliding && Math.random() < dt * 0.55 * intensity) d.r += 0.06 + Math.random()*0.12;
-      if(!d.sliding && d.r > 5.6 && Math.random() < dt * (0.5 + (d.r-5.6)*0.5)) d.sliding = true;
-      if(d.sliding){
-        d.vy += (d.r * 9) * dt;
-        d.vy = Math.min(d.vy, 40 + d.r*13);
-        d.y += d.vy * dt;
-        d.x += Math.sin(d.y*0.045 + d.life) * dt * 7;
-        // leave a wet trail of small drops
-        if(Math.random() < dt*22 && drops.length < 320){
-          drops.push({x: d.x + (Math.random()-.5)*d.r*0.7, y: d.y - d.r,
-                      r: Math.max(.7, d.r*0.13 + Math.random()*0.7), vy:0, sliding:false, life:0});
-          d.r = Math.max(3.4, d.r - 0.028);
-        }
-        sliders.push(d);
-      }
-    }
-    // a running drop swallows what it touches
-    for(const d of sliders){
-      for(const o of drops){
-        if(o === d || o.sliding) continue;
-        const dx = o.x - d.x, dy = o.y - d.y;
-        if(dx*dx + dy*dy < (d.r + o.r)*(d.r + o.r)*0.75){
-          d.r = Math.min(15, Math.sqrt(d.r*d.r + o.r*o.r));
-          o.r = 0;
-        }
-      }
-    }
-    drops = drops.filter(d => d.r > 0.5 && d.y - d.r < H);
-    while(drops.length < 120 * (0.55 + intensity*0.6)) drops.push(newDrop(false));
-
-    drops.sort((a,b) => a.r - b.r);
-    for(const d of drops) paintDrop(d);
-  }
-
-  function frame(t){
-    const dt = Math.min(0.05, (t - last)/1000 || 0.016);
-    last = t;
-    step(dt);
-    raf = requestAnimationFrame(frame);
-  }
-
-  addEventListener('resize', () => { resize(); });
-  document.addEventListener('visibilitychange', ()=>{
-    if(document.hidden){ cancelAnimationFrame(raf); raf = null; }
-    else if(!raf && !reduced){ last = performance.now(); raf = requestAnimationFrame(frame); }
-  });
-
-  return {
-    init(){
-      resize();
-      if(reduced){ step(0.016); return; }          // one static frame, no motion
-      last = performance.now();
-      raf = requestAnimationFrame(frame);
-    },
-    setIntensity(v){ intensity = v; }
-  };
-})();
-
-/* mood: the weather answers the timer */
-const MOODS = {
-  idle:  {tint:'rgba(10,30,40,.30)',  glow:.55, rain:1.0},
-  focus: {tint:'rgba(4,16,26,.52)',   glow:.85, rain:1.35},
-  break: {tint:'rgba(120,150,150,.14)',glow:.30, rain:0.42}
+const SCENES = {
+  cafe: [
+    {id:'cafe1', name:'Café 1', file:'cafe/cafe.mp4'},
+    {id:'cafe2', name:'Café 2', file:'cafe/cafe2.mp4'},
+    {id:'cafe3', name:'Café 3', file:'cafe/cafe6.mp4'},
+    {id:'cafe4', name:'Café 4', file:'cafe/cafe7.mp4'},
+    {id:'cafe5', name:'Café 5', file:'cafe/cafe8.mp4'}
+  ],
+  bird: [
+    {id:'bird1', name:'Bird 1', file:'Bird/1287-145131537.mp4'},
+    {id:'bird2', name:'Bird 2', file:'Bird/140111-774507949.mp4'},
+    {id:'bird3', name:'Bird 3', file:'Bird/172986-848188095.mp4'},
+    {id:'bird4', name:'Bird 4', file:'Bird/200427-912684284.mp4'},
+    {id:'bird5', name:'Bird 5', file:'Bird/225929.mp4'},
+    {id:'bird6', name:'Bird 6', file:'Bird/25096-347958089.mp4'},
+    {id:'bird7', name:'Bird 7', file:'Bird/265501.mp4'},
+    {id:'bird8', name:'Bird 8', file:'Bird/29529-376565555.mp4'},
+    {id:'bird9', name:'Bird 9', file:'Bird/326249.mp4'},
+    {id:'bird10', name:'Bird 10', file:'Bird/77784-564423242.mp4'}
+  ],
+  jungle: [
+    {id:'jungle1', name:'Jungle 1', file:'jungle/109726-685086332.mp4'},
+    {id:'jungle2', name:'Jungle 2', file:'jungle/132204-752663087.mp4'},
+    {id:'jungle3', name:'Jungle 3', file:'jungle/239782.mp4'},
+    {id:'jungle4', name:'Jungle 4', file:'jungle/37088-413229662.mp4'}
+  ]
 };
+
+const video      = document.getElementById('sceneVideo');
+const sceneHint   = document.getElementById('sceneHint');
+const sceneLoader = document.getElementById('sceneLoader');
+const scenesEl    = document.getElementById('scenes');
+const chosen    = {};                 // remembers each mode's last-picked scene
+const reducedMo = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const baseOK    = /^https?:\/\//.test(R2_BASE);
+const urlFor    = f => R2_BASE.replace(/\/?$/, '/') + f;
+
+function renderScenes(mode){
+  const list = SCENES[mode] || [];
+  scenesEl.innerHTML = list.map(s =>
+    `<button class="scene-chip" data-id="${s.id}" aria-pressed="false">${s.name}</button>`).join('');
+}
+
+function setBusy(b){ sceneLoader.hidden = !b; video.classList.toggle('loading', b); }
+
+function loadScene(mode, id){
+  const list = SCENES[mode] || [];
+  const sc = list.find(s => s.id === id) || list[0];
+  if(sc) chosen[mode] = sc.id;
+  [...scenesEl.children].forEach(c => c.setAttribute('aria-pressed', !!sc && c.dataset.id === sc.id));
+  if(sc && baseOK){
+    const url = urlFor(sc.file);
+    if(video.getAttribute('src') !== url){ setBusy(true); video.src = url; video.load(); }
+    video.hidden = false; sceneHint.hidden = true;
+    if(reducedMo) video.pause(); else video.play().catch(()=>{});
+  } else {
+    setBusy(false); video.removeAttribute('src'); video.hidden = true; sceneHint.hidden = false;
+  }
+}
+
+scenesEl.addEventListener('click', e => {
+  const b = e.target.closest('.scene-chip'); if(!b) return;
+  loadScene(sceneMode, b.dataset.id);
+});
+// buffering → spinner; ready → fade the clip in
+['loadstart','waiting','stalled'].forEach(ev => video.addEventListener(ev, () => { if(video.getAttribute('src')) setBusy(true); }));
+['playing','canplay','loadeddata'].forEach(ev => video.addEventListener(ev, () => setBusy(false)));
+// a bad filename or unreachable URL falls back to the hint card
+video.addEventListener('error', () => {
+  setBusy(false);
+  if(video.getAttribute('src')){ video.hidden = true; sceneHint.hidden = false; }
+});
+
+/* per-mode look: tint / light / chalkboard — now layered over the scene video */
+const LOOK = {
+  cafe: {
+    moods:{ idle:  {tint:'rgba(10,30,40,.30)',  glow:.55, rain:1.0},
+            focus: {tint:'rgba(4,16,26,.52)',   glow:.85, rain:1.35},
+            break: {tint:'rgba(120,150,150,.14)',glow:.30, rain:0.42} },
+    lamp:'radial-gradient(circle at 58% 42%,rgba(255,176,84,.40),rgba(255,150,60,.10) 44%,transparent 66%)',
+    board:"Ladoo's Café"
+  },
+  bird: {
+    moods:{ idle:  {tint:'rgba(150,180,150,.10)',glow:.70, rain:0},
+            focus: {tint:'rgba(120,160,130,.16)',glow:.92, rain:0},
+            break: {tint:'rgba(185,205,175,.08)',glow:.50, rain:0} },
+    lamp:'radial-gradient(circle at 72% 24%,rgba(255,244,205,.55),rgba(255,230,165,.14) 40%,transparent 64%)',
+    board:"Ladoo's Garden",
+    tag:'Windows open, morning light, birds in the garden. Pick a length and press start.'
+  },
+  jungle: {
+    moods:{ idle:  {tint:'rgba(16,50,30,.34)', glow:.40, rain:0.72},
+            focus: {tint:'rgba(8,40,24,.50)',  glow:.55, rain:0.98},
+            break: {tint:'rgba(120,160,130,.14)',glow:.25, rain:0.40} },
+    lamp:'radial-gradient(circle at 40% 20%,rgba(212,242,172,.35),rgba(150,210,120,.10) 42%,transparent 66%)',
+    board:"Ladoo's Jungle",
+    tag:'Deep green, warm rain, the whole forest breathing. Pick a length and press start.'
+  }
+};
+let sceneMode = 'cafe';
 function setMood(m){
-  const v = MOODS[m], r = document.documentElement.style;
+  const v = LOOK[sceneMode].moods[m], r = document.documentElement.style;
   r.setProperty('--tint', v.tint);
   r.setProperty('--glow', v.glow);
-  Glass.setIntensity(v.rain);
 }
-Glass.init();
+
+/* the soundscape that belongs to each scene, applied on switch */
+const MODE_MIX = {
+  cafe:   {rain:.50, cafe:.22, hum:.12},
+  bird:   {leaves:.30, birds:.55, hum:.10},
+  jungle: {rain:.30, leaves:.34, bugs:.55, birds:.16, hum:.14}
+};
+
+async function switchScene(next){
+  if(next === sceneMode || !LOOK[next]) return;
+  sceneMode = next;
+  const sc = LOOK[next];
+  document.body.classList.remove('mode-cafe','mode-bird','mode-jungle');
+  document.body.classList.add('mode-'+next);
+  document.querySelector('.lamp').style.background = sc.lamp;
+  document.querySelector('.board .chalk').textContent = sc.board;
+  if(sc.tag) document.getElementById('tagline').textContent = sc.tag;
+  renderScenes(next); loadScene(next, chosen[next]);
+  // carry the sound over to match (this runs from a click, so audio may start)
+  await Cafe.start();
+  const mix = MODE_MIX[next];
+  LAYERS.forEach(l => applyLevel(l.id, mix[l.id] || 0));
+  [...document.querySelectorAll('#presets .chip')].forEach(c => c.setAttribute('aria-pressed','false'));
+  reflectSound();
+  setMood(phase === 'idle' ? 'idle' : phase);
+}
+
+renderScenes('cafe'); loadScene('cafe', chosen.cafe);
+document.body.classList.add('mode-cafe');
+document.getElementById('modes').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-mode]'); if(!btn) return;
+  [...e.currentTarget.children].forEach(c => c.setAttribute('aria-pressed', c === btn));
+  switchScene(btn.dataset.mode);
+});
 
 /* ══════════════════════════════════════════════════
    2. THE SOUND — synthesised live, nothing loops
@@ -692,7 +589,7 @@ Glass.init();
 const Cafe = (function(){
   let ctx, master, comp, verb, verbSend, whiteBuf, brownBuf, pinkBuf;
   const L = {};                       // layer gains
-  let started = false, sched = null, nextDrop = 0, nextEvent = 0, nextCrackle = 0;
+  let started = false, sched = null, nextDrop = 0, nextEvent = 0, nextCrackle = 0, nextBird = 0, nextBug = 0;
 
   const noise = (fn, secs=8) => {
     const len = ctx.sampleRate*secs, b = ctx.createBuffer(2, len, ctx.sampleRate);
@@ -824,7 +721,70 @@ const Cafe = (function(){
     }
     L.hum.connect(comp);
 
+    /* ── LEAVES — wind moving through a canopy ── */
+    L.leaves = g(0);
+    { [-0.5, 0.5].forEach((p,i)=>{
+        const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = 2200 + i*700; bp.Q.value = 0.5;
+        const trem = ctx.createOscillator(), ta = g(0.4), lvl = g(0.5);
+        trem.frequency.value = 0.12 + i*0.05; trem.connect(ta); ta.connect(lvl.gain); trem.start();
+        const s = src(pinkBuf, 0.9 + i*0.12), pn = pan(p);
+        if(pn) chain(s, bp, lvl, pn, L.leaves); else chain(s, bp, lvl, L.leaves);
+      });
+      const send = g(0.3); L.leaves.connect(send); send.connect(verb);
+    }
+    L.leaves.connect(comp);
+
+    /* ── BIRDS & CRICKETS ─────────────────────
+       control-only gains: the scheduler reads their
+       level to decide how often, and how loud, to
+       fire the live chirps and trills below. */
+    L.birds = g(0);
+    L.bugs  = g(0);
+
     startScheduler();
+  }
+
+  // one live bird phrase — a few glided notes, never the same twice
+  function chirp(amp){
+    const t0 = ctx.currentTime;
+    const base = 1800 + Math.random()*2600, notes = 2 + (Math.random()*4|0);
+    const p = (Math.random()*2-1)*0.7;
+    let t = t0;
+    for(let i=0;i<notes;i++){
+      const o = ctx.createOscillator(); o.type = Math.random()<.5 ? 'sine' : 'triangle';
+      const f0 = base*(0.8 + Math.random()*0.5), f1 = f0*(1 + (Math.random()-0.4)*0.8);
+      const dur = 0.05 + Math.random()*0.11;
+      o.frequency.setValueAtTime(f0, t);
+      o.frequency.exponentialRampToValueAtTime(Math.max(220, f1), t + dur);
+      const gn = g(0), v = (0.05 + Math.random()*0.08) * amp;
+      gn.gain.setValueAtTime(0.0001, t);
+      gn.gain.exponentialRampToValueAtTime(v, t + 0.008);
+      gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      const pn = pan(p);
+      o.connect(gn);
+      if(pn){ gn.connect(pn); pn.connect(comp); const sd = g(0.4); pn.connect(sd); sd.connect(verb); }
+      else { gn.connect(comp); const sd = g(0.4); gn.connect(sd); sd.connect(verb); }
+      o.start(t); o.stop(t + dur + 0.05);
+      t += dur*(0.7 + Math.random()*0.9);
+    }
+  }
+  // one cricket trill — a short burst of fast pulses
+  function cricket(amp, p){
+    const t0 = ctx.currentTime;
+    const f = 3600 + Math.random()*2200, pulses = 8 + (Math.random()*14|0), rate = 0.012 + Math.random()*0.01;
+    const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = f;
+    const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = f; bp.Q.value = 12;
+    const gn = g(0); let t = t0;
+    for(let i=0;i<pulses;i++){
+      gn.gain.setValueAtTime(0.0001, t);
+      gn.gain.linearRampToValueAtTime((0.02 + Math.random()*0.02)*amp, t + rate*0.4);
+      gn.gain.linearRampToValueAtTime(0.0001, t + rate*0.9);
+      t += rate;
+    }
+    const pn = pan(p);
+    o.connect(bp); bp.connect(gn);
+    if(pn){ gn.connect(pn); pn.connect(comp); } else gn.connect(comp);
+    o.start(t0); o.stop(t + 0.05);
   }
 
   /* ── one-shot sounds ─────────────────────── */
@@ -861,6 +821,19 @@ const Cafe = (function(){
     sched = setInterval(()=>{
       const now = ctx.currentTime;
       const rain = L.rain.gain.value, cafe = L.cafe.gain.value, fire = L.fire.gain.value;
+      const birdLvl = L.birds ? L.birds.gain.value : 0, bugLvl = L.bugs ? L.bugs.gain.value : 0;
+
+      // birdsong — phrases spaced further apart when quieter
+      if(birdLvl > 0.02 && now > nextBird){
+        chirp(birdLvl);
+        if(Math.random() < 0.3*birdLvl) setTimeout(()=> chirp(birdLvl*0.8), 180 + Math.random()*260);
+        nextBird = now + (0.6 + Math.random()*3.4) / (0.4 + birdLvl);
+      }
+      // crickets — a steady chorus of overlapping trills
+      if(bugLvl > 0.02 && now > nextBug){
+        cricket(bugLvl, (Math.random()*2-1)*0.7);
+        nextBug = now + (0.14 + Math.random()*0.5) / (0.5 + bugLvl);
+      }
 
       // rain impacts — the patter that makes it read as real rain
       if(rain > 0.02){
@@ -938,11 +911,14 @@ const Cafe = (function(){
 })();
 
 const LAYERS = [
-  {id:'rain',  name:'Rain on glass'},
-  {id:'cafe',  name:'Café murmur'},
-  {id:'fire',  name:'Fireplace'},
-  {id:'noise', name:'Soft noise'},
-  {id:'hum',   name:'Warm hum'}
+  {id:'rain',   name:'Rain on glass'},
+  {id:'cafe',   name:'Café murmur'},
+  {id:'fire',   name:'Fireplace'},
+  {id:'leaves', name:'Leaves & wind'},
+  {id:'birds',  name:'Birdsong'},
+  {id:'bugs',   name:'Crickets'},
+  {id:'noise',  name:'Soft noise'},
+  {id:'hum',    name:'Warm hum'}
 ];
 const PRESETS = {
   rain:  {rain:.52, cafe:.20, fire:0,   noise:0,   hum:.12},
@@ -989,7 +965,7 @@ document.getElementById('presets').addEventListener('click', async e=>{
   const btn = e.target.closest('[data-preset]'); if(!btn) return;
   await Cafe.start();
   const p = PRESETS[btn.dataset.preset];
-  Object.keys(p).forEach(k => applyLevel(k, p[k]));
+  LAYERS.forEach(l => applyLevel(l.id, p[l.id] || 0));
   [...document.querySelectorAll('#presets .chip')].forEach(c => c.setAttribute('aria-pressed', c === btn));
   reflectSound();
 });
@@ -1051,8 +1027,9 @@ async function startPhase(next){
   el.start.textContent = 'Pause';
   el.boardSub.textContent = next === 'focus' ? 'do not disturb' : 'back in a bit';
   if(next === 'focus' && !anySound()){
-    Object.keys(PRESETS.rain).forEach(k => applyLevel(k, PRESETS.rain[k]));
-    document.querySelector('[data-preset="rain"]').setAttribute('aria-pressed', true);
+    const mix = MODE_MIX[sceneMode];
+    LAYERS.forEach(l => applyLevel(l.id, mix[l.id] || 0));
+    [...document.querySelectorAll('#presets .chip')].forEach(c => c.setAttribute('aria-pressed', false));
     reflectSound();
   }
   run(); paint();
@@ -1182,6 +1159,18 @@ document.addEventListener('keydown', e=>{ if(e.key === 'Escape') noteEl.classLis
 document.getElementById('zenBtn').addEventListener('click', e=>{
   document.body.classList.toggle('zen');
   e.target.textContent = document.body.classList.contains('zen') ? 'Show everything' : 'Zen mode';
+});
+const fsBtn = document.getElementById('fsBtn');
+fsBtn.addEventListener('click', ()=>{
+  const on = document.body.classList.toggle('solo');
+  fsBtn.setAttribute('aria-pressed', on);
+  fsBtn.textContent = on ? '⤡' : '⛶';
+  fsBtn.title = on ? 'Show controls' : 'Full window';
+  // the window changed width — let the glass resample itself
+  requestAnimationFrame(()=> window.dispatchEvent(new Event('resize')));
+});
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && document.body.classList.contains('solo')) fsBtn.click();
 });
 (function greet(){
   const h = new Date().getHours();
