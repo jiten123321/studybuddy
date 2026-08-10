@@ -467,15 +467,15 @@ const SCENES = {
     {id:'b225929', name:'Bird 5',  file:'Bird/225929.mp4'},
     {id:'b140111', name:'Bird 6',  file:'Bird/140111-774507949.mp4'},
     {id:'b200427', name:'Bird 7',  file:'Bird/200427-912684284.mp4'},
-    {id:'b326249', name:'Bird 8',  file:'Bird/326249.mp4'},
-    {id:'b265501', name:'Bird 9',  file:'Bird/265501.mp4'},
-    {id:'b1287',   name:'Bird 10', file:'Bird/1287-145131537.mp4'}
+    {id:'b326249', name:'Bird 8',  file:'clips/bird8.mp4'},
+    {id:'b265501', name:'Bird 9',  file:'clips/bird9.mp4'},
+    {id:'b1287',   name:'Bird 10', file:'clips/bird10.mp4'}
   ],
   jungle: [
     {id:'j37088',  name:'Jungle 1', file:'jungle/37088-413229662.mp4'},
     {id:'j109726', name:'Jungle 2', file:'jungle/109726-685086332.mp4'},
     {id:'j132204', name:'Jungle 3', file:'jungle/132204-752663087.mp4'},
-    {id:'j239782', name:'Jungle 4', file:'jungle/239782.mp4'}
+    {id:'j239782', name:'Jungle 4', file:'clips/jungle4.mp4'}
   ]
 };
 
@@ -487,7 +487,7 @@ const scenesEl    = document.getElementById('scenes');
 const chosen      = {};                 // remembers each mode's last-picked scene
 const reducedMo   = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const baseOK      = /^https?:\/\//.test(R2_BASE);
-const urlFor      = f => R2_BASE.replace(/\/?$/, '/') + f;
+const urlFor      = f => f.startsWith('clips/') ? f : R2_BASE.replace(/\/?$/, '/') + f;
 
 let front = vids[0];        // the video currently shown
 let loadingVid = null;      // the video buffering an incoming scene
