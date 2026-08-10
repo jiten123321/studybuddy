@@ -164,7 +164,14 @@ body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,
 .fsbtn[aria-pressed="true"]{background:var(--accent-wash);color:var(--sodium-soft)}
 
 /* video scene background + empty-state hint */
-.scenevid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#060f14;z-index:0}
+.scenevid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#060f14;z-index:0;
+  opacity:1;transition:opacity .45s ease}
+.scenevid.loading{opacity:0}
+.scene-loader{position:absolute;top:50%;left:50%;width:46px;height:46px;margin:-23px 0 0 -23px;z-index:2;
+  border-radius:50%;border:3px solid rgba(243,233,219,.16);border-top-color:var(--sodium);
+  animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.scene-loader{animation:none;border-top-color:rgba(243,233,219,.5)}}
 .scenehint{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;gap:12px;padding:9% 10%;color:var(--fog);background:radial-gradient(120% 90% at 50% 40%,#0c1a20,#060f13)}
 .scenehint .chalk{font-family:var(--display);font-size:clamp(18px,2.4vw,24px);color:var(--milk)}
@@ -320,6 +327,7 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
     <div class="scenes" id="scenes" role="group" aria-label="Choose a scene view"></div>
     <button class="fsbtn" id="fsBtn" title="Full window" aria-label="Hide controls for a full-window view" aria-pressed="false">⛶</button>
     <video id="sceneVideo" class="scenevid" autoplay loop muted playsinline aria-hidden="true"></video>
+    <div class="scene-loader" id="sceneLoader" hidden aria-hidden="true"></div>
     <div class="scenehint" id="sceneHint" hidden>
       <div class="chalk">No scene video yet</div>
       <p>Set <code>R2_BASE</code> to your bucket's public URL and list the video filenames in the <code>SCENES</code> config, and each scene will loop here.</p>
@@ -458,9 +466,10 @@ const SCENES = {
   ]
 };
 
-const video    = document.getElementById('sceneVideo');
-const sceneHint = document.getElementById('sceneHint');
-const scenesEl  = document.getElementById('scenes');
+const video      = document.getElementById('sceneVideo');
+const sceneHint   = document.getElementById('sceneHint');
+const sceneLoader = document.getElementById('sceneLoader');
+const scenesEl    = document.getElementById('scenes');
 const chosen    = {};                 // remembers each mode's last-picked scene
 const reducedMo = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const baseOK    = /^https?:\/\//.test(R2_BASE);
@@ -472,6 +481,8 @@ function renderScenes(mode){
     `<button class="scene-chip" data-id="${s.id}" aria-pressed="false">${s.name}</button>`).join('');
 }
 
+function setBusy(b){ sceneLoader.hidden = !b; video.classList.toggle('loading', b); }
+
 function loadScene(mode, id){
   const list = SCENES[mode] || [];
   const sc = list.find(s => s.id === id) || list[0];
@@ -479,11 +490,11 @@ function loadScene(mode, id){
   [...scenesEl.children].forEach(c => c.setAttribute('aria-pressed', !!sc && c.dataset.id === sc.id));
   if(sc && baseOK){
     const url = urlFor(sc.file);
-    if(video.getAttribute('src') !== url){ video.src = url; video.load(); }
+    if(video.getAttribute('src') !== url){ setBusy(true); video.src = url; video.load(); }
     video.hidden = false; sceneHint.hidden = true;
     if(reducedMo) video.pause(); else video.play().catch(()=>{});
   } else {
-    video.removeAttribute('src'); video.hidden = true; sceneHint.hidden = false;
+    setBusy(false); video.removeAttribute('src'); video.hidden = true; sceneHint.hidden = false;
   }
 }
 
@@ -491,8 +502,12 @@ scenesEl.addEventListener('click', e => {
   const b = e.target.closest('.scene-chip'); if(!b) return;
   loadScene(sceneMode, b.dataset.id);
 });
+// buffering → spinner; ready → fade the clip in
+['loadstart','waiting','stalled'].forEach(ev => video.addEventListener(ev, () => { if(video.getAttribute('src')) setBusy(true); }));
+['playing','canplay','loadeddata'].forEach(ev => video.addEventListener(ev, () => setBusy(false)));
 // a bad filename or unreachable URL falls back to the hint card
 video.addEventListener('error', () => {
+  setBusy(false);
   if(video.getAttribute('src')){ video.hidden = true; sceneHint.hidden = false; }
 });
 
