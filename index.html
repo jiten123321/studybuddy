@@ -192,6 +192,10 @@ body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,
 .scene-chip:hover{color:var(--milk);border-color:rgba(243,233,219,.34)}
 .scene-chip[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent-line);
   color:var(--sodium-soft);box-shadow:0 0 14px -4px var(--accent-line)}
+/* auto-hide the on-video controls after a spell of no activity */
+.modes,.scenes,.fsbtn{transition:opacity .35s ease}
+body.idle .modes,body.idle .scenes,body.idle .fsbtn{opacity:0;pointer-events:none}
+body.idle{cursor:none}
 body.solo{overflow:hidden}
 body.solo .shell{grid-template-columns:1fr;height:100dvh}
 body.solo .panel{display:none}
@@ -631,6 +635,19 @@ document.getElementById('modes').addEventListener('click', e=>{
   [...e.currentTarget.children].forEach(c => c.setAttribute('aria-pressed', c === btn));
   switchScene(btn.dataset.mode);
 });
+
+/* hide the floating controls after 2 min idle; any activity brings them back */
+(function(){
+  let idleT; const IDLE_MS = 120000;
+  function active(){
+    document.body.classList.remove('idle');
+    clearTimeout(idleT);
+    idleT = setTimeout(() => document.body.classList.add('idle'), IDLE_MS);
+  }
+  ['mousemove','mousedown','wheel','keydown','touchstart'].forEach(ev =>
+    addEventListener(ev, active, {passive:true}));
+  active();
+})();
 
 /* ══════════════════════════════════════════════════
    2. THE SOUND — synthesised live, nothing loops
