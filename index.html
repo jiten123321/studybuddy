@@ -154,6 +154,17 @@ body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,
 .mode[aria-pressed="true"]{background:var(--accent-wash);color:var(--sodium-soft);
   box-shadow:inset 0 0 0 1px var(--accent-line)}
 
+/* full-window toggle — hides the whole control sidebar */
+.fsbtn{position:absolute;top:18px;right:18px;z-index:25;width:40px;height:40px;border-radius:12px;
+  display:grid;place-items:center;cursor:pointer;font-size:17px;color:var(--milk);
+  background:rgba(6,14,18,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(243,233,219,.18);box-shadow:0 12px 34px rgba(0,0,0,.45);transition:.2s}
+.fsbtn:hover{color:var(--sodium);border-color:var(--accent-line)}
+body.solo{overflow:hidden}
+body.solo .shell{grid-template-columns:1fr;height:100dvh}
+body.solo .panel{display:none}
+body.solo .scene{height:100dvh}
+
 .timer{border:1px solid var(--line);border-radius:18px;padding:24px 22px 20px;text-align:center;
   background:radial-gradient(125% 95% at 50% 0%,rgba(255,180,84,.10),transparent 72%)}
 .phase{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--sodium)}
@@ -281,6 +292,7 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
       <button class="mode" data-mode="bird" aria-pressed="false"><span class="ico">🐦</span>Bird</button>
       <button class="mode" data-mode="jungle" aria-pressed="false"><span class="ico">🌿</span>Jungle</button>
     </div>
+    <button class="fsbtn" id="fsBtn" title="Full window" aria-label="Hide controls for a full-window view" aria-pressed="false">⛶</button>
     <canvas id="glassCanvas" aria-hidden="true"></canvas>
     <div class="tint"></div>
     <div class="lamp"></div>
@@ -1002,7 +1014,7 @@ const Glass = (function(){
     raf = requestAnimationFrame(frame);
   }
 
-  addEventListener('resize', () => { resize(); });
+  addEventListener('resize', () => { resize(); if(reduced) step(0.016); });
   document.addEventListener('visibilitychange', ()=>{
     if(document.hidden){ cancelAnimationFrame(raf); raf = null; }
     else if(!raf && !reduced){ last = performance.now(); raf = requestAnimationFrame(frame); }
@@ -1675,6 +1687,18 @@ document.addEventListener('keydown', e=>{ if(e.key === 'Escape') noteEl.classLis
 document.getElementById('zenBtn').addEventListener('click', e=>{
   document.body.classList.toggle('zen');
   e.target.textContent = document.body.classList.contains('zen') ? 'Show everything' : 'Zen mode';
+});
+const fsBtn = document.getElementById('fsBtn');
+fsBtn.addEventListener('click', ()=>{
+  const on = document.body.classList.toggle('solo');
+  fsBtn.setAttribute('aria-pressed', on);
+  fsBtn.textContent = on ? '⤡' : '⛶';
+  fsBtn.title = on ? 'Show controls' : 'Full window';
+  // the window changed width — let the glass resample itself
+  requestAnimationFrame(()=> window.dispatchEvent(new Event('resize')));
+});
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && document.body.classList.contains('solo')) fsBtn.click();
 });
 (function greet(){
   const h = new Date().getHours();
