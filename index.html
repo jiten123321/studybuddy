@@ -331,7 +331,8 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
     <div class="scene-loader" id="sceneLoader" hidden aria-hidden="true"></div>
     <div class="scenehint" id="sceneHint" hidden>
       <div class="chalk">No scene video yet</div>
-      <p>Set <code>R2_BASE</code> to your bucket's public URL and list the video filenames in the <code>SCENES</code> config, and each scene will loop here.</p>
+      <p id="hintDiag">checking…</p>
+      <p>build v3 · R2_BASE = <code id="hintBase">?</code></p>
     </div>
     <div class="tint"></div>
     <div class="lamp"></div>
@@ -475,6 +476,7 @@ const chosen    = {};                 // remembers each mode's last-picked scene
 const reducedMo = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const baseOK    = /^https?:\/\//.test(R2_BASE);
 const urlFor    = f => R2_BASE.replace(/\/?$/, '/') + f;
+try{ document.getElementById('hintBase').textContent = R2_BASE || '(empty)'; }catch(e){}
 
 function renderScenes(mode){
   const list = SCENES[mode] || [];
@@ -496,6 +498,7 @@ function loadScene(mode, id){
     if(reducedMo) video.pause(); else video.play().catch(()=>{});
   } else {
     setBusy(false); video.removeAttribute('src'); video.hidden = true; sceneHint.hidden = false;
+    try{ document.getElementById('hintDiag').textContent = baseOK ? ('No video listed for '+mode+'.') : 'R2_BASE is EMPTY in this deployed build.'; }catch(e){}
   }
 }
 
@@ -509,7 +512,10 @@ scenesEl.addEventListener('click', e => {
 // a bad filename or unreachable URL falls back to the hint card
 video.addEventListener('error', () => {
   setBusy(false);
-  if(video.getAttribute('src')){ video.hidden = true; sceneHint.hidden = false; }
+  if(video.getAttribute('src')){
+    video.hidden = true; sceneHint.hidden = false;
+    try{ document.getElementById('hintDiag').textContent = 'Video FAILED to load: ' + (video.currentSrc||video.getAttribute('src')) + (video.error ? ' (code '+video.error.code+')' : ''); }catch(e){}
+  }
 });
 
 /* per-mode look: tint / light / chalkboard — now layered over the scene video */
