@@ -36,10 +36,19 @@
   --accent-line:rgba(255,180,84,.45);
 }
 /* per-scene accent + light identity */
-body.mode-bird{--sodium:#f4c95d;--sodium-soft:#ffe6ad;
+body.mode-bird{--sodium:#f4c95d;--sodium-soft:#ffe6ad;--glass-deep:#0c130a;
   --accent-wash:rgba(244,201,93,.16);--accent-line:rgba(244,201,93,.48)}
-body.mode-jungle{--sodium:#8ad38f;--sodium-soft:#c8efcb;
+body.mode-jungle{--sodium:#8ad38f;--sodium-soft:#c8efcb;--glass-deep:#06120b;
   --accent-wash:rgba(138,211,143,.16);--accent-line:rgba(138,211,143,.48)}
+/* the room reskins with the scene */
+body.mode-bird .panel{background:linear-gradient(180deg,rgba(20,28,18,.95),rgba(9,14,8,.99))}
+body.mode-jungle .panel{background:linear-gradient(180deg,rgba(9,24,16,.96),rgba(4,11,8,.99))}
+body.mode-bird .scene,body.mode-bird .board{background-color:#0d1409}
+body.mode-jungle .scene,body.mode-jungle .board{background-color:#06120b}
+body.mode-bird .board{border-color:#3c4a2a}
+body.mode-jungle .board{border-color:#233a26}
+body.mode-bird .timer{background:radial-gradient(125% 95% at 50% 0%,rgba(244,201,93,.10),transparent 72%)}
+body.mode-jungle .timer{background:radial-gradient(125% 95% at 50% 0%,rgba(138,211,143,.10),transparent 72%)}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -83,6 +92,17 @@ body{
 .sill{position:absolute;left:0;right:0;bottom:0;height:25%;
   background:linear-gradient(180deg,#12262e 0%,#0a171d 38%,#060f13 100%);
   border-top:1px solid rgba(255,180,84,.20)}
+/* each scene brings its own windowsill objects + room colour */
+.still-set{display:none}
+body.mode-cafe   .still-set.for-cafe,
+body.mode-bird   .still-set.for-bird,
+body.mode-jungle .still-set.for-jungle{display:inline}
+.steam{display:none}
+body.mode-cafe .steam{display:block}
+body.mode-bird .sill{background:linear-gradient(180deg,#27311f 0%,#171e12 40%,#0b1108 100%);
+  border-top-color:rgba(244,201,93,.38)}
+body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,#05100a 100%);
+  border-top-color:rgba(138,211,143,.32)}
 .still{position:absolute;left:0;right:0;bottom:-2px;width:100%;display:block}
 .steam{position:absolute;pointer-events:none;filter:url(#wisp)}
 .steam ellipse{fill:rgba(255,236,210,.30);animation:rise 7s ease-in-out infinite}
@@ -299,8 +319,22 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
           <radialGradient id="contact" cx=".5" cy=".5" r=".5">
             <stop offset="0" stop-color="rgba(0,0,0,.55)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/>
           </radialGradient>
+          <linearGradient id="terra" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#9c4a29"/><stop offset=".4" stop-color="#d17a4a"/>
+            <stop offset=".75" stop-color="#b56135"/><stop offset="1" stop-color="#7d3a20"/>
+          </linearGradient>
+          <radialGradient id="stone" cx=".4" cy=".3" r=".85">
+            <stop offset="0" stop-color="#5f7060"/><stop offset=".6" stop-color="#3c4a3c"/>
+            <stop offset="1" stop-color="#232d26"/>
+          </radialGradient>
+          <linearGradient id="darkpot" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#1c1410"/><stop offset=".35" stop-color="#3f2e22"/>
+            <stop offset=".7" stop-color="#2c2018"/><stop offset="1" stop-color="#14100b"/>
+          </linearGradient>
         </defs>
 
+        <!-- ═══ CAFÉ windowsill: books, coffee, plant ═══ -->
+        <g class="still-set for-cafe">
         <!-- contact shadows -->
         <ellipse cx="430" cy="186" rx="110" ry="16" fill="url(#contact)"/>
         <ellipse cx="168" cy="180" rx="105" ry="13" fill="url(#contact)"/>
@@ -347,6 +381,88 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
               <path d="M743 124 q-22 -22 -30 -50"/><path d="M743 124 q22 -26 28 -54"/><path d="M743 124 q-3 -32 12 -60"/>
             </g>
           </g>
+        </g>
+        </g>
+
+        <!-- ═══ GARDEN windowsill: potted flowers ═══ -->
+        <g class="still-set for-bird">
+          <ellipse cx="150" cy="190" rx="74" ry="12" fill="url(#contact)"/>
+          <ellipse cx="440" cy="192" rx="70" ry="12" fill="url(#contact)"/>
+          <ellipse cx="742" cy="192" rx="80" ry="12" fill="url(#contact)"/>
+
+          <!-- left: leafy plant with blossoms -->
+          <g>
+            <path d="M112 188 h80 l-12 -52 h-56 z" fill="url(#terra)"/>
+            <rect x="104" y="126" width="96" height="16" rx="4" fill="#c46a3f"/>
+            <rect x="104" y="126" width="96" height="5" rx="3" fill="rgba(255,214,176,.4)"/>
+            <path d="M152 128 c-30 -6 -47 -30 -44 -56 26 5 44 26 44 56z" fill="url(#leafA)"/>
+            <path d="M152 128 c30 -10 44 -37 39 -62 -26 6 -42 30 -39 62z" fill="url(#leafB)"/>
+            <path d="M152 128 c-6 -26 5 -54 22 -68 9 24 2 52 -22 68z" fill="url(#leafA)"/>
+            <circle cx="130" cy="86" r="9" fill="#f4b6c8"/><circle cx="130" cy="86" r="3.4" fill="#ffe08a"/>
+            <circle cx="170" cy="80" r="9" fill="#f4d06a"/><circle cx="170" cy="80" r="3.4" fill="#a65a2e"/>
+            <circle cx="150" cy="70" r="9" fill="#e79ad2"/><circle cx="150" cy="70" r="3.4" fill="#ffe08a"/>
+          </g>
+
+          <!-- center: tall tulips -->
+          <g>
+            <path d="M404 190 h74 l-11 -50 h-52 z" fill="url(#terra)"/>
+            <rect x="396" y="130" width="90" height="15" rx="4" fill="#c46a3f"/>
+            <rect x="396" y="130" width="90" height="5" rx="3" fill="rgba(255,214,176,.4)"/>
+            <g stroke="#4f7f45" stroke-width="4" fill="none" stroke-linecap="round">
+              <path d="M424 134 q-4 -32 -2 -56"/><path d="M441 134 q0 -38 0 -64"/><path d="M458 134 q6 -32 10 -54"/>
+            </g>
+            <path d="M422 80 q-11 -14 0 -23 q11 9 0 23z" fill="#e8918c"/>
+            <path d="M441 72 q-12 -15 0 -25 q12 10 0 25z" fill="#f4c95d"/>
+            <path d="M468 82 q-11 -14 0 -23 q11 9 0 23z" fill="#e79ad2"/>
+          </g>
+
+          <!-- right: herb pot -->
+          <g>
+            <path d="M700 188 h84 l-11 -44 h-62 z" fill="url(#terra)"/>
+            <rect x="692" y="134" width="100" height="14" rx="4" fill="#c46a3f"/>
+            <rect x="692" y="134" width="100" height="5" rx="3" fill="rgba(255,214,176,.4)"/>
+            <g stroke="#3f7a45" stroke-width="3" fill="none" stroke-linecap="round">
+              <path d="M720 138 q-26 -26 -30 -60"/><path d="M742 138 q-4 -36 -2 -66"/>
+              <path d="M764 138 q24 -30 28 -60"/><path d="M742 138 q28 -22 40 -44"/>
+            </g>
+          </g>
+        </g>
+
+        <!-- ═══ JUNGLE windowsill: monstera, fern, mossy stone ═══ -->
+        <g class="still-set for-jungle">
+          <ellipse cx="252" cy="190" rx="128" ry="13" fill="url(#contact)"/>
+          <ellipse cx="644" cy="190" rx="112" ry="13" fill="url(#contact)"/>
+
+          <!-- big monstera in a dark pot -->
+          <g>
+            <path d="M182 190 h150 l-18 -60 h-114 z" fill="url(#darkpot)"/>
+            <rect x="170" y="120" width="174" height="18" rx="5" fill="#3a2c20"/>
+            <rect x="170" y="120" width="174" height="5" rx="3" fill="rgba(120,150,120,.18)"/>
+            <g fill="url(#leafA)">
+              <path d="M256 124 c-72 -8 -122 -62 -112 -122 62 8 106 58 112 122z"/>
+              <path d="M256 124 c68 -14 110 -72 98 -130 -62 12 -102 66 -98 130z"/>
+              <path d="M256 124 c-8 -68 24 -124 68 -152 20 60 4 122 -68 152z"/>
+            </g>
+            <g stroke="rgba(12,40,26,.6)" stroke-width="2" fill="none">
+              <path d="M256 124 q-42 -52 -62 -106"/><path d="M256 124 q44 -58 58 -114"/>
+              <path d="M256 124 q-2 -66 30 -118"/>
+            </g>
+          </g>
+
+          <!-- fern pot -->
+          <g>
+            <path d="M598 190 h96 l-11 -44 h-74 z" fill="url(#terra)"/>
+            <rect x="590" y="140" width="112" height="14" rx="4" fill="#a85736"/>
+            <g stroke="#3f7a45" stroke-width="3" fill="none" stroke-linecap="round">
+              <path d="M624 144 q-30 -28 -36 -66"/><path d="M646 144 q-6 -38 -4 -74"/>
+              <path d="M668 144 q26 -32 32 -66"/><path d="M646 144 q30 -20 44 -40"/>
+            </g>
+          </g>
+
+          <!-- mossy stone -->
+          <path d="M418 188 q-6 -28 30 -32 q44 -6 56 16 q6 20 -12 22 z" fill="url(#stone)"/>
+          <path d="M430 160 q28 -12 60 -4" stroke="rgba(126,180,116,.5)" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <path d="M436 172 q22 -8 44 -2" stroke="rgba(150,200,130,.35)" stroke-width="4" fill="none" stroke-linecap="round"/>
         </g>
       </svg>
 
