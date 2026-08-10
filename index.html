@@ -164,8 +164,7 @@ body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,
 .fsbtn[aria-pressed="true"]{background:var(--accent-wash);color:var(--sodium-soft)}
 
 /* video scene background + empty-state hint */
-.scenevid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:transparent;z-index:0;
-  opacity:0;transition:opacity .6s ease}
+.scenevid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:transparent;z-index:0;opacity:0}
 .scenevid.show{opacity:1}
 /* respect the hidden attribute (class display: props would otherwise keep these visible) */
 .scenehint[hidden],.scenevid[hidden],.scene-loader[hidden]{display:none!important}
@@ -531,8 +530,8 @@ function reveal(v){
   const old = front;
   v.style.zIndex = '1'; if(old !== v) old.style.zIndex = '0';
   v.classList.add('show');
+  if(old !== v){ old.classList.remove('show'); try{ old.pause(); }catch(e){} }
   front = v;
-  if(old !== v) setTimeout(() => { old.classList.remove('show'); try{ old.pause(); }catch(e){} }, 700);
 }
 
 vids.forEach(v => {
@@ -919,7 +918,7 @@ const Cafe = (function(){
       if(!started){ build(); started = true; }
       if(ctx.state === 'suspended') await ctx.resume();
     },
-    set(name, v){ if(started && L[name]) L[name].gain.setTargetAtTime(v, ctx.currentTime, 0.4); },
+    set(name, v){ if(started && L[name]) L[name].gain.setTargetAtTime(v, ctx.currentTime, 0.02); },
     setMaster(v){ if(started) master.gain.setTargetAtTime(v, ctx.currentTime, 0.15); },
     chime(up){
       if(!started) return;
