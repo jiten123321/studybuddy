@@ -534,7 +534,20 @@ function reveal(v){
   front = v;
 }
 
+// Many source clips fade in from / out to black. Loop only the lit middle
+// so neither fade is ever shown (no re-encoding needed).
+const SKIP_IN = 1.0, SKIP_OUT = 1.25;
+function setLoopWindow(v){
+  const d = v.duration;
+  if(!isFinite(d) || d < 3 || d - SKIP_IN - SKIP_OUT < 1){ v.loop = true; v._lin = 0; v._lout = 0; return; }
+  v.loop = false; v._lin = SKIP_IN; v._lout = d - SKIP_OUT;
+  if(v.currentTime < v._lin || v.currentTime > v._lout){ try{ v.currentTime = v._lin; }catch(e){} }
+}
 vids.forEach(v => {
+  v.addEventListener('loadedmetadata', () => setLoopWindow(v));
+  v.addEventListener('timeupdate', () => {
+    if(!v.loop && v._lout && v.currentTime >= v._lout){ try{ v.currentTime = v._lin; }catch(e){} }
+  });
   ['playing','canplay','loadeddata'].forEach(ev => v.addEventListener(ev, () => reveal(v)));
   ['waiting','stalled'].forEach(ev => v.addEventListener(ev, () => { if(v === loadingVid) setBusy(true); }));
   v.addEventListener('error', () => {
