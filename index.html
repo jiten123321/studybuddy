@@ -162,6 +162,26 @@ body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,
 .fsbtn:hover{color:#fff;background:var(--accent-wash);border-color:var(--sodium);
   box-shadow:0 12px 34px rgba(0,0,0,.45),0 0 22px -2px var(--accent-line)}
 .fsbtn[aria-pressed="true"]{background:var(--accent-wash);color:var(--sodium-soft)}
+
+/* video scene background + empty-state hint */
+.scenevid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#060f14;z-index:0}
+.scenehint{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:12px;padding:9% 10%;color:var(--fog);background:radial-gradient(120% 90% at 50% 40%,#0c1a20,#060f13)}
+.scenehint .chalk{font-family:var(--display);font-size:clamp(18px,2.4vw,24px);color:var(--milk)}
+.scenehint p{margin:0;max-width:46ch;font-size:13px;line-height:1.65}
+.scenehint code{font-family:var(--mono);font-size:12px;color:var(--sodium-soft);
+  background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px}
+
+/* scene picker — sits just under the mode switcher */
+.scenes{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:25;
+  display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:min(88%,560px)}
+.scene-chip{padding:6px 13px;border-radius:20px;cursor:pointer;white-space:nowrap;
+  border:1px solid rgba(243,233,219,.18);background:rgba(6,14,18,.6);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  color:var(--fog);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;transition:.2s}
+.scene-chip:hover{color:var(--milk);border-color:rgba(243,233,219,.34)}
+.scene-chip[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent-line);
+  color:var(--sodium-soft);box-shadow:0 0 14px -4px var(--accent-line)}
 body.solo{overflow:hidden}
 body.solo .shell{grid-template-columns:1fr;height:100dvh}
 body.solo .panel{display:none}
@@ -297,206 +317,19 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
       <button class="mode" data-mode="bird" aria-pressed="false"><span class="ico">🐦</span>Bird</button>
       <button class="mode" data-mode="jungle" aria-pressed="false"><span class="ico">🌿</span>Jungle</button>
     </div>
+    <div class="scenes" id="scenes" role="group" aria-label="Choose a scene view"></div>
     <button class="fsbtn" id="fsBtn" title="Full window" aria-label="Hide controls for a full-window view" aria-pressed="false">⛶</button>
-    <canvas id="glassCanvas" aria-hidden="true"></canvas>
+    <video id="sceneVideo" class="scenevid" autoplay loop muted playsinline aria-hidden="true"></video>
+    <div class="scenehint" id="sceneHint" hidden>
+      <div class="chalk">No scene video yet</div>
+      <p>Set <code>R2_BASE</code> to your bucket's public URL and list the video filenames in the <code>SCENES</code> config, and each scene will loop here.</p>
+    </div>
     <div class="tint"></div>
     <div class="lamp"></div>
     <div class="fog"></div>
     <div class="vignette"></div>
     <svg class="grain"><rect width="100%" height="100%" filter="url(#grainF)"/></svg>
 
-    <div class="sill">
-      <svg class="still" viewBox="0 0 900 230" preserveAspectRatio="xMidYMax meet">
-        <defs>
-          <linearGradient id="ceramic" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#4a4238"/><stop offset=".16" stop-color="#efe6d6"/>
-            <stop offset=".55" stop-color="#fbf5ea"/><stop offset=".82" stop-color="#cbbda9"/>
-            <stop offset="1" stop-color="#8a7864"/>
-          </linearGradient>
-          <linearGradient id="saucer" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#6d6255"/><stop offset=".3" stop-color="#efe6d6"/>
-            <stop offset=".7" stop-color="#d5c9b6"/><stop offset="1" stop-color="#7b6c5c"/>
-          </linearGradient>
-          <radialGradient id="coffee" cx=".38" cy=".3" r=".8">
-            <stop offset="0" stop-color="#6b4326"/><stop offset=".5" stop-color="#3d2414"/>
-            <stop offset="1" stop-color="#21120a"/>
-          </radialGradient>
-          <linearGradient id="pot" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#31241c"/><stop offset=".3" stop-color="#7c5a41"/>
-            <stop offset=".7" stop-color="#5c4230"/><stop offset="1" stop-color="#241a13"/>
-          </linearGradient>
-          <linearGradient id="leafA" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0" stop-color="#2f5b41"/><stop offset="1" stop-color="#79a97f"/>
-          </linearGradient>
-          <linearGradient id="leafB" x1="1" y1="1" x2="0" y2="0">
-            <stop offset="0" stop-color="#27503a"/><stop offset="1" stop-color="#5f9169"/>
-          </linearGradient>
-          <linearGradient id="bookA" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#1b3a44"/><stop offset=".5" stop-color="#2f5f6d"/><stop offset="1" stop-color="#15303a"/>
-          </linearGradient>
-          <linearGradient id="bookB" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#4a2a1c"/><stop offset=".5" stop-color="#7b4a2e"/><stop offset="1" stop-color="#3a2015"/>
-          </linearGradient>
-          <linearGradient id="bookC" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#5c4520"/><stop offset=".5" stop-color="#93743a"/><stop offset="1" stop-color="#4a3719"/>
-          </linearGradient>
-          <radialGradient id="contact" cx=".5" cy=".5" r=".5">
-            <stop offset="0" stop-color="rgba(0,0,0,.55)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/>
-          </radialGradient>
-          <linearGradient id="terra" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#9c4a29"/><stop offset=".4" stop-color="#d17a4a"/>
-            <stop offset=".75" stop-color="#b56135"/><stop offset="1" stop-color="#7d3a20"/>
-          </linearGradient>
-          <radialGradient id="stone" cx=".4" cy=".3" r=".85">
-            <stop offset="0" stop-color="#5f7060"/><stop offset=".6" stop-color="#3c4a3c"/>
-            <stop offset="1" stop-color="#232d26"/>
-          </radialGradient>
-          <linearGradient id="darkpot" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#1c1410"/><stop offset=".35" stop-color="#3f2e22"/>
-            <stop offset=".7" stop-color="#2c2018"/><stop offset="1" stop-color="#14100b"/>
-          </linearGradient>
-        </defs>
-
-        <!-- ═══ CAFÉ windowsill: books, coffee, plant ═══ -->
-        <g class="still-set for-cafe">
-        <!-- contact shadows -->
-        <ellipse cx="430" cy="186" rx="110" ry="16" fill="url(#contact)"/>
-        <ellipse cx="168" cy="180" rx="105" ry="13" fill="url(#contact)"/>
-        <ellipse cx="742" cy="188" rx="95" ry="14" fill="url(#contact)"/>
-
-        <!-- books -->
-        <g>
-          <rect x="88" y="160" width="162" height="18" rx="3" fill="url(#bookA)"/>
-          <rect x="92" y="163" width="154" height="4" rx="2" fill="rgba(240,232,214,.5)"/>
-          <rect x="97" y="142" width="146" height="17" rx="3" fill="url(#bookB)"/>
-          <rect x="101" y="145" width="138" height="3.5" rx="2" fill="rgba(240,232,214,.42)"/>
-          <rect x="108" y="125" width="128" height="16" rx="3" fill="url(#bookC)"/>
-          <rect x="112" y="128" width="120" height="3" rx="2" fill="rgba(240,232,214,.38)"/>
-          <rect x="236" y="126" width="4" height="52" fill="rgba(255,190,120,.16)"/>
-        </g>
-
-        <!-- cup + saucer -->
-        <g>
-          <ellipse cx="430" cy="176" rx="78" ry="13" fill="url(#saucer)"/>
-          <ellipse cx="430" cy="173" rx="78" ry="12" fill="#efe6d6"/>
-          <ellipse cx="430" cy="171" rx="62" ry="9" fill="#c9bca8"/>
-          <ellipse cx="430" cy="170" rx="52" ry="7" fill="#ded2bf"/>
-          <path d="M470 112 a30 26 0 0 1 6 46 l-6 -9 a20 17 0 0 0 -4 -30 z" fill="#e6dbc9"/>
-          <path d="M386 108 h88 l-11 50 a34 30 0 0 1 -66 0 z" fill="url(#ceramic)"/>
-          <ellipse cx="430" cy="108" rx="44" ry="8" fill="#efe6d6"/>
-          <ellipse cx="430" cy="109" rx="38" ry="6.4" fill="url(#coffee)"/>
-          <ellipse cx="418" cy="107.5" rx="12" ry="2" fill="rgba(255,220,175,.28)"/>
-          <path d="M394 122 q6 26 16 34" stroke="rgba(255,255,255,.5)" stroke-width="3.4" fill="none" stroke-linecap="round"/>
-          <path d="M462 124 q-3 22 -10 30" stroke="rgba(255,180,84,.35)" stroke-width="3" fill="none" stroke-linecap="round"/>
-        </g>
-
-        <!-- plant -->
-        <g>
-          <path d="M706 178 h74 l-8 -46 h-58 z" fill="url(#pot)"/>
-          <rect x="700" y="122" width="86" height="15" rx="4" fill="#8a6446"/>
-          <rect x="700" y="122" width="86" height="5" rx="3" fill="rgba(255,205,150,.25)"/>
-          <g>
-            <path d="M743 124 c-32 -8 -50 -34 -47 -62 28 5 47 28 47 62z" fill="url(#leafA)"/>
-            <path d="M743 124 c32 -12 47 -41 42 -68 -28 7 -45 32 -42 68z" fill="url(#leafB)"/>
-            <path d="M743 124 c-9 -28 3 -60 22 -77 11 26 4 58 -22 77z" fill="url(#leafA)"/>
-            <path d="M743 124 c15 -24 9 -56 -9 -73 -13 24 -11 54 9 73z" fill="url(#leafB)"/>
-            <path d="M743 124 c-24 -16 -30 -44 -20 -66 17 14 26 42 20 66z" fill="url(#leafA)" opacity=".9"/>
-            <g stroke="rgba(20,45,32,.5)" stroke-width="1.4" fill="none">
-              <path d="M743 124 q-22 -22 -30 -50"/><path d="M743 124 q22 -26 28 -54"/><path d="M743 124 q-3 -32 12 -60"/>
-            </g>
-          </g>
-        </g>
-        </g>
-
-        <!-- ═══ GARDEN windowsill: potted flowers ═══ -->
-        <g class="still-set for-bird">
-          <ellipse cx="150" cy="190" rx="74" ry="12" fill="url(#contact)"/>
-          <ellipse cx="440" cy="192" rx="70" ry="12" fill="url(#contact)"/>
-          <ellipse cx="742" cy="192" rx="80" ry="12" fill="url(#contact)"/>
-
-          <!-- left: leafy plant with blossoms -->
-          <g>
-            <path d="M112 188 h80 l-12 -52 h-56 z" fill="url(#terra)"/>
-            <rect x="104" y="126" width="96" height="16" rx="4" fill="#c46a3f"/>
-            <rect x="104" y="126" width="96" height="5" rx="3" fill="rgba(255,214,176,.4)"/>
-            <path d="M152 128 c-30 -6 -47 -30 -44 -56 26 5 44 26 44 56z" fill="url(#leafA)"/>
-            <path d="M152 128 c30 -10 44 -37 39 -62 -26 6 -42 30 -39 62z" fill="url(#leafB)"/>
-            <path d="M152 128 c-6 -26 5 -54 22 -68 9 24 2 52 -22 68z" fill="url(#leafA)"/>
-            <circle cx="130" cy="86" r="9" fill="#f4b6c8"/><circle cx="130" cy="86" r="3.4" fill="#ffe08a"/>
-            <circle cx="170" cy="80" r="9" fill="#f4d06a"/><circle cx="170" cy="80" r="3.4" fill="#a65a2e"/>
-            <circle cx="150" cy="70" r="9" fill="#e79ad2"/><circle cx="150" cy="70" r="3.4" fill="#ffe08a"/>
-          </g>
-
-          <!-- center: tall tulips -->
-          <g>
-            <path d="M404 190 h74 l-11 -50 h-52 z" fill="url(#terra)"/>
-            <rect x="396" y="130" width="90" height="15" rx="4" fill="#c46a3f"/>
-            <rect x="396" y="130" width="90" height="5" rx="3" fill="rgba(255,214,176,.4)"/>
-            <g stroke="#4f7f45" stroke-width="4" fill="none" stroke-linecap="round">
-              <path d="M424 134 q-4 -32 -2 -56"/><path d="M441 134 q0 -38 0 -64"/><path d="M458 134 q6 -32 10 -54"/>
-            </g>
-            <path d="M422 80 q-11 -14 0 -23 q11 9 0 23z" fill="#e8918c"/>
-            <path d="M441 72 q-12 -15 0 -25 q12 10 0 25z" fill="#f4c95d"/>
-            <path d="M468 82 q-11 -14 0 -23 q11 9 0 23z" fill="#e79ad2"/>
-          </g>
-
-          <!-- right: herb pot -->
-          <g>
-            <path d="M700 188 h84 l-11 -44 h-62 z" fill="url(#terra)"/>
-            <rect x="692" y="134" width="100" height="14" rx="4" fill="#c46a3f"/>
-            <rect x="692" y="134" width="100" height="5" rx="3" fill="rgba(255,214,176,.4)"/>
-            <g stroke="#3f7a45" stroke-width="3" fill="none" stroke-linecap="round">
-              <path d="M720 138 q-26 -26 -30 -60"/><path d="M742 138 q-4 -36 -2 -66"/>
-              <path d="M764 138 q24 -30 28 -60"/><path d="M742 138 q28 -22 40 -44"/>
-            </g>
-          </g>
-        </g>
-
-        <!-- ═══ JUNGLE windowsill: monstera, fern, mossy stone ═══ -->
-        <g class="still-set for-jungle">
-          <ellipse cx="252" cy="190" rx="128" ry="13" fill="url(#contact)"/>
-          <ellipse cx="644" cy="190" rx="112" ry="13" fill="url(#contact)"/>
-
-          <!-- big monstera in a dark pot -->
-          <g>
-            <path d="M182 190 h150 l-18 -60 h-114 z" fill="url(#darkpot)"/>
-            <rect x="170" y="120" width="174" height="18" rx="5" fill="#3a2c20"/>
-            <rect x="170" y="120" width="174" height="5" rx="3" fill="rgba(120,150,120,.18)"/>
-            <g fill="url(#leafA)">
-              <path d="M256 124 c-72 -8 -122 -62 -112 -122 62 8 106 58 112 122z"/>
-              <path d="M256 124 c68 -14 110 -72 98 -130 -62 12 -102 66 -98 130z"/>
-              <path d="M256 124 c-8 -68 24 -124 68 -152 20 60 4 122 -68 152z"/>
-            </g>
-            <g stroke="rgba(12,40,26,.6)" stroke-width="2" fill="none">
-              <path d="M256 124 q-42 -52 -62 -106"/><path d="M256 124 q44 -58 58 -114"/>
-              <path d="M256 124 q-2 -66 30 -118"/>
-            </g>
-          </g>
-
-          <!-- fern pot -->
-          <g>
-            <path d="M598 190 h96 l-11 -44 h-74 z" fill="url(#terra)"/>
-            <rect x="590" y="140" width="112" height="14" rx="4" fill="#a85736"/>
-            <g stroke="#3f7a45" stroke-width="3" fill="none" stroke-linecap="round">
-              <path d="M624 144 q-30 -28 -36 -66"/><path d="M646 144 q-6 -38 -4 -74"/>
-              <path d="M668 144 q26 -32 32 -66"/><path d="M646 144 q30 -20 44 -40"/>
-            </g>
-          </g>
-
-          <!-- mossy stone -->
-          <path d="M418 188 q-6 -28 30 -32 q44 -6 56 16 q6 20 -12 22 z" fill="url(#stone)"/>
-          <path d="M430 160 q28 -12 60 -4" stroke="rgba(126,180,116,.5)" stroke-width="5" fill="none" stroke-linecap="round"/>
-          <path d="M436 172 q22 -8 44 -2" stroke="rgba(150,200,130,.35)" stroke-width="4" fill="none" stroke-linecap="round"/>
-        </g>
-      </svg>
-
-      <svg class="steam" style="left:44.5%;bottom:60%;width:96px;height:90px" viewBox="0 0 60 60">
-        <ellipse cx="22" cy="46" rx="8" ry="11"/>
-        <ellipse cx="32" cy="48" rx="7" ry="10"/>
-        <ellipse cx="27" cy="44" rx="9" ry="12"/>
-        <ellipse cx="36" cy="45" rx="6" ry="9"/>
-      </svg>
-    </div>
 
     <div class="frame">
       <div class="bar v"></div>
@@ -584,467 +417,77 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
 
 <script>
 /* ══════════════════════════════════════════════════
-   1. THE GLASS — a live rain-on-window simulation
-      Droplets act as lenses: each one samples the
-      sharp street behind it while everything else
-      stays out of focus. They grow, slide, leave
-      trails, and swallow the drops they pass.
+   1. THE SCENES — one looping video per scene, grouped
+      by mode. Ladoo picks a scene under the current mode
+      and the clip loops as the view outside the window.
+
+      TO WIRE UP REAL VIDEOS:
+        1. Give the studybuddy R2 bucket a public URL
+           (enable its r2.dev URL or attach a custom
+           domain) and paste it into R2_BASE below.
+        2. List each scene's video filename (object key)
+           under SCENES. Nothing else to change.
    ══════════════════════════════════════════════════ */
-const Glass = (function(){
-  const cv = document.getElementById('glassCanvas');
-  const ctx = cv.getContext('2d');
-  const bg = document.createElement('canvas');       // sharp street
-  const bgc = bg.getContext('2d');
-  const soft = document.createElement('canvas');     // pre-blurred street
-  const sc = soft.getContext('2d');
-  let W = 0, H = 0, dpr = 1;
-  let drops = [], streaks = [], birds = [], flies = [], motes = [];
-  let intensity = 1, raf = null, last = 0;
-  let mode = 'cafe';
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const R2_BASE = '';   // e.g. 'https://pub-xxxxxxxxxxxx.r2.dev/'  ← paste your bucket's public URL
 
-  // how much of each element lives in each scene
-  const SCENE_CFG = {
-    cafe:   {drops:120, streaks:90, birds:0, flies:0,  motes:0 },
-    bird:   {drops:0,   streaks:0,  birds:5, flies:0,  motes:26},
-    jungle: {drops:55,  streaks:46, birds:0, flies:22, motes:0 }
-  };
-
-  // deterministic noise so a resize doesn't reshuffle the city
-  let seed = 20260810;
-  function rnd(){ seed = (seed*1664525 + 1013904223) % 4294967296; return seed/4294967296; }
-
-  function drawStreet(w,h){
-    seed = 20260810;
-    const g = bgc.createLinearGradient(0,0,0,h);
-    g.addColorStop(0,'#050d14'); g.addColorStop(.42,'#0b2029'); g.addColorStop(1,'#123039');
-    bgc.fillStyle = g; bgc.fillRect(0,0,w,h);
-
-    // far skyline
-    for(let layer=0; layer<3; layer++){
-      const base = h*(0.52 + layer*0.09);
-      const shade = ['#07141b','#0a1c24','#0d242d'][layer];
-      let x = -40;
-      while(x < w+40){
-        const bw = 40 + rnd()*90, bh = (60 + rnd()*170) * (1 - layer*0.16);
-        bgc.fillStyle = shade;
-        bgc.fillRect(x, base-bh, bw, bh+10);
-        // lit windows
-        const cols = Math.max(1, Math.floor(bw/16)), rows = Math.max(1, Math.floor(bh/20));
-        for(let i=0;i<cols;i++) for(let j=0;j<rows;j++){
-          if(rnd() > 0.55 - layer*0.12) continue;
-          const warm = rnd();
-          bgc.fillStyle = warm > .72 ? 'rgba(255,208,140,.85)'
-                        : warm > .34 ? 'rgba(255,178,92,.72)'
-                                     : 'rgba(150,205,220,.55)';
-          bgc.fillRect(x + 6 + i*16, base-bh + 10 + j*20, 6, 9);
-        }
-        x += bw + 6 + rnd()*22;
-      }
-    }
-
-    // street lamps + their haze
-    const lampY = h*0.70;
-    for(let i=0;i<6;i++){
-      const lx = (i+0.5)*(w/6) + (rnd()-0.5)*40;
-      const rg = bgc.createRadialGradient(lx, lampY, 2, lx, lampY, 120);
-      rg.addColorStop(0,'rgba(255,196,118,.95)');
-      rg.addColorStop(.16,'rgba(255,170,80,.42)');
-      rg.addColorStop(1,'rgba(255,150,60,0)');
-      bgc.fillStyle = rg; bgc.beginPath(); bgc.arc(lx, lampY, 120, 0, 7); bgc.fill();
-      bgc.fillStyle = 'rgba(255,225,180,1)';
-      bgc.beginPath(); bgc.arc(lx, lampY, 5, 0, 7); bgc.fill();
-      // wet reflection on the road
-      const rf = bgc.createLinearGradient(lx, lampY, lx, h);
-      rf.addColorStop(0,'rgba(255,175,85,.34)'); rf.addColorStop(1,'rgba(255,150,60,0)');
-      bgc.fillStyle = rf;
-      bgc.fillRect(lx-13, lampY, 26, h-lampY);
-    }
-    // road
-    const road = bgc.createLinearGradient(0,h*0.78,0,h);
-    road.addColorStop(0,'rgba(6,16,20,.55)'); road.addColorStop(1,'rgba(4,10,13,.9)');
-    bgc.fillStyle = road; bgc.fillRect(0,h*0.78,w,h*0.22);
-
-    // one distant traffic light, because a street always has one
-    const tx = w*0.82, ty = h*0.58;
-    ['rgba(230,80,70,.9)','rgba(255,190,90,.9)','rgba(110,210,140,.9)'].forEach((c,i)=>{
-      const rg = bgc.createRadialGradient(tx, ty+i*22, 1, tx, ty+i*22, 26);
-      rg.addColorStop(0,c); rg.addColorStop(1,'rgba(0,0,0,0)');
-      bgc.fillStyle = rg; bgc.beginPath(); bgc.arc(tx, ty+i*22, 26, 0, 7); bgc.fill();
-    });
-  }
-
-  /* GARDEN — a bright morning sky beyond the glass */
-  function drawGarden(w,h){
-    seed = 20260810;
-    const g = bgc.createLinearGradient(0,0,0,h);
-    g.addColorStop(0,'#a7d4ea'); g.addColorStop(.5,'#d8ecdd');
-    g.addColorStop(.72,'#f4ead0'); g.addColorStop(1,'#cdd6a4');
-    bgc.fillStyle = g; bgc.fillRect(0,0,w,h);
-
-    // low sun, upper right, hazing the sky around it
-    const sx = w*0.74, sy = h*0.22, R = Math.max(w,h);
-    const sun = bgc.createRadialGradient(sx, sy, 4, sx, sy, R*0.55);
-    sun.addColorStop(0,'rgba(255,251,232,.95)');
-    sun.addColorStop(.10,'rgba(255,240,190,.55)');
-    sun.addColorStop(.36,'rgba(255,236,182,.14)');
-    sun.addColorStop(1,'rgba(255,236,182,0)');
-    bgc.fillStyle = sun; bgc.fillRect(0,0,w,h);
-    bgc.fillStyle = 'rgba(255,253,240,.95)';
-    bgc.beginPath(); bgc.arc(sx, sy, 26, 0, 7); bgc.fill();
-
-    // soft clouds
-    for(let i=0;i<5;i++){
-      const cx = rnd()*w, cy = h*(0.08+rnd()*0.32), cw = 90+rnd()*170, ch = 22+rnd()*24;
-      const cg = bgc.createRadialGradient(cx, cy, 4, cx, cy, cw*0.6);
-      cg.addColorStop(0,'rgba(255,255,255,.85)'); cg.addColorStop(1,'rgba(255,255,255,0)');
-      bgc.fillStyle = cg;
-      for(let k=0;k<4;k++){
-        bgc.beginPath();
-        bgc.ellipse(cx+(rnd()-.5)*cw, cy+(rnd()-.5)*ch, cw*(0.3+rnd()*0.3), ch*(0.6+rnd()*0.5), 0, 0, 7);
-        bgc.fill();
-      }
-    }
-    // rolling hills / distant treeline
-    ['rgba(150,178,128,.55)','rgba(112,152,98,.72)','rgba(74,116,70,.92)'].forEach((c,layer)=>{
-      const base = h*(0.6+layer*0.11);
-      bgc.fillStyle = c; bgc.beginPath(); bgc.moveTo(0,h); bgc.lineTo(0,base);
-      let x = 0;
-      while(x < w){ const st = 40+rnd()*80; bgc.quadraticCurveTo(x+st/2, base-(10+rnd()*38*(layer+1)), x+st, base); x += st; }
-      bgc.lineTo(w,h); bgc.closePath(); bgc.fill();
-    });
-    // a foreground branch reaching in from the top-left, with leaves
-    bgc.strokeStyle = '#2a2018'; bgc.lineCap = 'round';
-    bgc.lineWidth = 15; bgc.beginPath();
-    bgc.moveTo(-12,-12); bgc.quadraticCurveTo(w*0.16, h*0.05, w*0.35, h*0.15); bgc.stroke();
-    bgc.lineWidth = 6;
-    [[0.15,0.055],[0.23,0.10],[0.30,0.125]].forEach(([tx,ty])=>{
-      bgc.beginPath(); bgc.moveTo(w*tx, h*ty);
-      bgc.quadraticCurveTo(w*(tx+0.02), h*(ty-0.07), w*(tx+0.05), h*(ty-0.13)); bgc.stroke();
-    });
-    for(let i=0;i<30;i++){
-      const t = rnd(), bx = w*(0.03+t*0.33), by = h*(t*0.15) - rnd()*44;
-      bgc.save(); bgc.translate(bx, by); bgc.rotate(rnd()*6);
-      const lg = bgc.createLinearGradient(-8,0,8,0);
-      lg.addColorStop(0,'#3d6b40'); lg.addColorStop(1,'#71a56c');
-      bgc.fillStyle = lg; bgc.beginPath();
-      bgc.ellipse(0,0, 5+rnd()*6, 10+rnd()*8, 0, 0, 7); bgc.fill(); bgc.restore();
-    }
-  }
-
-  /* JUNGLE — dense, misty rainforest beyond the glass */
-  function drawJungle(w,h){
-    seed = 20260810;
-    const g = bgc.createLinearGradient(0,0,0,h);
-    g.addColorStop(0,'#0c2417'); g.addColorStop(.5,'#123520'); g.addColorStop(1,'#0a1f14');
-    bgc.fillStyle = g; bgc.fillRect(0,0,w,h);
-
-    // blobby depth layers of foliage
-    ['#16402a','#1c5030','#276039'].forEach((c,layer)=>{
-      bgc.fillStyle = c;
-      for(let i=0;i<10+layer*7;i++){
-        const cx = rnd()*w, cy = rnd()*h, r = 40+rnd()*120*(layer*0.5+1);
-        bgc.beginPath(); bgc.ellipse(cx, cy, r, r*(0.6+rnd()*0.4), rnd()*6, 0, 7); bgc.fill();
-      }
-    });
-    // shafts of light coming down through the canopy
-    bgc.save(); bgc.globalCompositeOperation = 'screen';
-    for(let i=0;i<3;i++){
-      const x = w*(0.22+i*0.29) + (rnd()-.5)*70;
-      const sg = bgc.createLinearGradient(x, 0, x-90, h);
-      sg.addColorStop(0,'rgba(214,242,172,.22)'); sg.addColorStop(1,'rgba(214,242,172,0)');
-      bgc.fillStyle = sg; bgc.beginPath();
-      bgc.moveTo(x-30,0); bgc.lineTo(x+42,0); bgc.lineTo(x-64,h); bgc.lineTo(x-158,h);
-      bgc.closePath(); bgc.fill();
-    }
-    bgc.restore();
-    // horizontal mist bands
-    for(let i=0;i<4;i++){
-      const my = h*(0.4+i*0.14);
-      const mg = bgc.createLinearGradient(0, my-30, 0, my+30);
-      mg.addColorStop(0,'rgba(192,222,202,0)'); mg.addColorStop(.5,'rgba(192,222,202,.13)');
-      mg.addColorStop(1,'rgba(192,222,202,0)');
-      bgc.fillStyle = mg; bgc.fillRect(0, my-30, w, 60);
-    }
-    // big leaf silhouettes framing the edges
-    const leaf = (cx,cy,s,rot,col)=>{
-      bgc.save(); bgc.translate(cx,cy); bgc.rotate(rot); bgc.fillStyle = col;
-      bgc.beginPath(); bgc.moveTo(0,0);
-      bgc.quadraticCurveTo(s*0.5,-s*0.42, 0,-s); bgc.quadraticCurveTo(-s*0.5,-s*0.42, 0,0); bgc.fill();
-      bgc.strokeStyle = 'rgba(8,24,16,.5)'; bgc.lineWidth = Math.max(1, s*0.03);
-      bgc.beginPath(); bgc.moveTo(0,0); bgc.lineTo(0,-s*0.9); bgc.stroke();
-      bgc.restore();
-    };
-    leaf(w*0.02, h*0.0,  220, 2.4, '#0e2c1b'); leaf(w*0.12, -20, 180, 3.0, '#123420');
-    leaf(w*0.98, h*0.02, 240,-2.4, '#0e2c1b'); leaf(w*0.90, -10, 180,-3.0, '#123420');
-    leaf(w*0.20, h,      260, 0.3, '#0c2417'); leaf(w*0.80, h,     240,-0.3, '#0c2417');
-  }
-
-  function drawSceneBG(){
-    if(mode === 'bird') drawGarden(W,H);
-    else if(mode === 'jungle') drawJungle(W,H);
-    else drawStreet(W,H);
-  }
-
-  // blur by downscaling and back up — works everywhere, costs nothing after setup
-  function blurStreet(w,h){
-    const f = 14;
-    const tmp = document.createElement('canvas');
-    tmp.width = Math.max(1, w/f|0); tmp.height = Math.max(1, h/f|0);
-    const t = tmp.getContext('2d');
-    t.drawImage(bg, 0, 0, tmp.width, tmp.height);
-    sc.clearRect(0,0,w,h);
-    sc.imageSmoothingEnabled = true; sc.imageSmoothingQuality = 'high';
-    sc.drawImage(tmp, 0, 0, tmp.width, tmp.height, -f, -f, w+f*2, h+f*2);
-  }
-
-  function resize(){
-    const r = cv.getBoundingClientRect();
-    if(!r.width || !r.height) return;
-    dpr = Math.min(2, window.devicePixelRatio || 1);
-    W = r.width; H = r.height;
-    [cv, bg, soft].forEach(c => { c.width = W*dpr; c.height = H*dpr; });
-    [ctx, bgc, sc].forEach(c => c.setTransform(dpr,0,0,dpr,0,0));
-    drawSceneBG(); blurStreet(W,H);
-    seedParticles();
-  }
-
-  function seedParticles(){
-    const cfg = SCENE_CFG[mode];
-    drops = []; streaks = []; birds = []; flies = []; motes = [];
-    for(let i=0;i<cfg.drops;i++)   drops.push(newDrop(true));
-    for(let i=0;i<cfg.streaks;i++) streaks.push(newStreak(true));
-    for(let i=0;i<cfg.birds;i++)   birds.push(newBird(true));
-    for(let i=0;i<cfg.flies;i++)   flies.push(newFly());
-    for(let i=0;i<cfg.motes;i++)   motes.push(newMote());
-  }
-
-  function newDrop(seedIn){
-    const big = Math.random() < 0.14;
-    return {
-      x: Math.random()*W,
-      y: seedIn ? Math.random()*H : Math.random()*H*0.35,
-      r: big ? 5 + Math.random()*7 : 1.2 + Math.random()*3.2,
-      vy: 0, sliding: false, life: 0
-    };
-  }
-  function newStreak(seedIn){
-    return {
-      x: Math.random()*W,
-      y: seedIn ? Math.random()*H : -40,
-      len: 24 + Math.random()*60,
-      sp: 620 + Math.random()*820,
-      a: 0.10 + Math.random()*0.30,
-      w: Math.random() < .3 ? 1.4 : 0.9
-    };
-  }
-  // a distant bird gliding across the sky (garden mode)
-  function newBird(seedIn){
-    const dir = Math.random() < .5 ? 1 : -1;
-    return {
-      dir,
-      x: seedIn ? Math.random()*W : (dir > 0 ? -30 : W+30),
-      y: H*(0.10 + Math.random()*0.42),
-      v: 22 + Math.random()*34,
-      s: 5 + Math.random()*7,
-      ph: Math.random()*6.28,
-      fl: 6 + Math.random()*4,
-      life: Math.random()*6
-    };
-  }
-  // a firefly drifting in the undergrowth (jungle mode)
-  function newFly(){
-    return {
-      x: Math.random()*W, y: H*(0.28 + Math.random()*0.66),
-      vx: (Math.random()-.5)*12, vy: (Math.random()-.5)*9,
-      ph: Math.random()*6.28, sp: 1.4 + Math.random()*1.8,
-      r: 1.4 + Math.random()*1.6, turn: 0
-    };
-  }
-  // a speck of dust floating in the sunlight (garden mode)
-  function newMote(){
-    return {
-      x: Math.random()*W, y: Math.random()*H,
-      vx: (Math.random()-.3)*6, vy: (Math.random()-.5)*4,
-      r: 0.6 + Math.random()*1.4, a: 0.08 + Math.random()*0.22
-    };
-  }
-
-  function paintBird(b){
-    const flap = Math.sin(b.ph)*0.5 + 0.5;      // 0..1 wing raise
-    const wy = b.s*(0.35 + flap*0.85);
-    ctx.strokeStyle = 'rgba(28,38,42,.68)';
-    ctx.lineWidth = Math.max(1, b.s*0.17); ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(b.x - b.s, b.y + wy*0.25);
-    ctx.quadraticCurveTo(b.x, b.y - wy, b.x, b.y);
-    ctx.quadraticCurveTo(b.x, b.y - wy, b.x + b.s, b.y + wy*0.25);
-    ctx.stroke();
-  }
-  function paintFly(f){
-    const a = (Math.sin(f.ph)*0.5 + 0.5)*0.9;
-    const gr = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r*4);
-    gr.addColorStop(0, `rgba(196,255,150,${(a*0.8).toFixed(3)})`);
-    gr.addColorStop(1, 'rgba(196,255,150,0)');
-    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(f.x, f.y, f.r*4, 0, 7); ctx.fill();
-    ctx.fillStyle = `rgba(224,255,196,${a.toFixed(3)})`;
-    ctx.beginPath(); ctx.arc(f.x, f.y, f.r*0.6, 0, 7); ctx.fill();
-  }
-  function paintMote(m){
-    ctx.fillStyle = `rgba(255,250,232,${m.a.toFixed(3)})`;
-    ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, 7); ctx.fill();
-  }
-
-  function paintDrop(d){
-    const r = d.r;
-    if(r < 0.6) return;
-    // tiny drops are just wet specks — cheap to draw, and they read the same
-    if(r < 2.2){
-      ctx.beginPath(); ctx.arc(d.x, d.y, r, 0, 7);
-      ctx.fillStyle = 'rgba(226,244,250,.16)'; ctx.fill();
-      ctx.beginPath(); ctx.arc(d.x - r*0.3, d.y - r*0.35, r*0.42, 0, 7);
-      ctx.fillStyle = 'rgba(255,255,255,.34)'; ctx.fill();
-      return;
-    }
-    ctx.save();
-    ctx.beginPath(); ctx.arc(d.x, d.y, r, 0, 7); ctx.closePath(); ctx.clip();
-    // refraction: the world inside a droplet is sharp, magnified and inverted
-    const s = r * 2.6;
-    const sx = Math.max(0, Math.min(W - s, d.x - s/2));
-    const sy = Math.max(0, Math.min(H - s, d.y - s/2 + r*0.6));
-    ctx.translate(d.x, d.y); ctx.rotate(Math.PI);
-    ctx.drawImage(bg, sx*dpr, sy*dpr, s*dpr, s*dpr, -r*1.08, -r*1.08, r*2.16, r*2.16);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    // body shading
-    const gr = ctx.createRadialGradient(d.x - r*0.35, d.y - r*0.4, r*0.1, d.x, d.y, r);
-    gr.addColorStop(0,'rgba(255,255,255,.30)');
-    gr.addColorStop(.55,'rgba(255,255,255,.03)');
-    gr.addColorStop(.92,'rgba(0,0,0,.20)');
-    gr.addColorStop(1,'rgba(0,0,0,.34)');
-    ctx.fillStyle = gr; ctx.fillRect(d.x-r, d.y-r, r*2, r*2);
-    ctx.restore();
-    // specular highlight
-    if(r > 2.2){
-      ctx.beginPath();
-      ctx.ellipse(d.x - r*0.34, d.y - r*0.42, r*0.24, r*0.17, -0.5, 0, 7);
-      ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill();
-    }
-    // rim
-    ctx.beginPath(); ctx.arc(d.x, d.y, r, 0, 7);
-    ctx.strokeStyle = 'rgba(210,240,250,.22)'; ctx.lineWidth = Math.max(.5, r*0.09); ctx.stroke();
-  }
-
-  function step(dt){
-    // falling rain behind the glass
-    ctx.drawImage(soft, 0, 0, W, H);
-    ctx.save();
-    ctx.lineCap = 'round';
-    for(const s of streaks){
-      s.y += s.sp * dt * (0.5 + intensity*0.8);
-      if(s.y - s.len > H){ Object.assign(s, newStreak(false)); }
-      ctx.strokeStyle = `rgba(206,235,245,${(s.a*intensity).toFixed(3)})`;
-      ctx.lineWidth = s.w;
-      ctx.beginPath(); ctx.moveTo(s.x, s.y - s.len); ctx.lineTo(s.x, s.y); ctx.stroke();
-    }
-    ctx.restore();
-
-    // droplets on the glass
-    const sliders = [];
-    for(const d of drops){
-      d.life += dt;
-      // slowly gather more water
-      if(!d.sliding && Math.random() < dt * 0.55 * intensity) d.r += 0.06 + Math.random()*0.12;
-      if(!d.sliding && d.r > 5.6 && Math.random() < dt * (0.5 + (d.r-5.6)*0.5)) d.sliding = true;
-      if(d.sliding){
-        d.vy += (d.r * 9) * dt;
-        d.vy = Math.min(d.vy, 40 + d.r*13);
-        d.y += d.vy * dt;
-        d.x += Math.sin(d.y*0.045 + d.life) * dt * 7;
-        // leave a wet trail of small drops
-        if(Math.random() < dt*22 && drops.length < 320){
-          drops.push({x: d.x + (Math.random()-.5)*d.r*0.7, y: d.y - d.r,
-                      r: Math.max(.7, d.r*0.13 + Math.random()*0.7), vy:0, sliding:false, life:0});
-          d.r = Math.max(3.4, d.r - 0.028);
-        }
-        sliders.push(d);
-      }
-    }
-    // a running drop swallows what it touches
-    for(const d of sliders){
-      for(const o of drops){
-        if(o === d || o.sliding) continue;
-        const dx = o.x - d.x, dy = o.y - d.y;
-        if(dx*dx + dy*dy < (d.r + o.r)*(d.r + o.r)*0.75){
-          d.r = Math.min(15, Math.sqrt(d.r*d.r + o.r*o.r));
-          o.r = 0;
-        }
-      }
-    }
-    drops = drops.filter(d => d.r > 0.5 && d.y - d.r < H);
-    while(drops.length < SCENE_CFG[mode].drops * (0.55 + intensity*0.6)) drops.push(newDrop(false));
-
-    drops.sort((a,b) => a.r - b.r);
-    for(const d of drops) paintDrop(d);
-
-    // birds gliding across the garden sky
-    for(const b of birds){
-      b.x += b.v * b.dir * dt;
-      b.y += Math.sin(b.life*0.6) * dt * 6;
-      b.ph += dt * b.fl; b.life += dt;
-      if((b.dir > 0 && b.x > W+40) || (b.dir < 0 && b.x < -40)) Object.assign(b, newBird(false));
-      paintBird(b);
-    }
-    // fireflies in the undergrowth
-    for(const f of flies){
-      f.turn -= dt;
-      if(f.turn <= 0){ f.vx = (Math.random()-.5)*14; f.vy = (Math.random()-.5)*11; f.turn = 0.6 + Math.random()*1.4; }
-      f.x += f.vx*dt; f.y += f.vy*dt; f.ph += dt*f.sp;
-      if(f.x < 0) f.x = W; if(f.x > W) f.x = 0;
-      if(f.y < H*0.24) f.y = H*0.24; if(f.y > H) f.y = H;
-      paintFly(f);
-    }
-    // dust motes in the sunlight
-    for(const m of motes){
-      m.x += m.vx*dt; m.y += m.vy*dt;
-      if(m.x < -4) m.x = W+4; if(m.x > W+4) m.x = -4;
-      if(m.y < -4) m.y = H+4; if(m.y > H+4) m.y = -4;
-      paintMote(m);
-    }
-  }
-
-  function frame(t){
-    const dt = Math.min(0.05, (t - last)/1000 || 0.016);
-    last = t;
-    step(dt);
-    raf = requestAnimationFrame(frame);
-  }
-
-  addEventListener('resize', () => { resize(); if(reduced) step(0.016); });
-  document.addEventListener('visibilitychange', ()=>{
-    if(document.hidden){ cancelAnimationFrame(raf); raf = null; }
-    else if(!raf && !reduced){ last = performance.now(); raf = requestAnimationFrame(frame); }
-  });
-
-  return {
-    init(){
-      resize();
-      if(reduced){ step(0.016); return; }          // one static frame, no motion
-      last = performance.now();
-      raf = requestAnimationFrame(frame);
-    },
-    setIntensity(v){ intensity = v; },
-    setScene(m){
-      if(!SCENE_CFG[m] || m === mode) return;
-      mode = m;
-      drawSceneBG(); blurStreet(W,H);
-      seedParticles();
-      if(reduced) step(0.016);        // motion is off — repaint one static frame
-    }
-  };
-})();
-
-/* mood: the weather answers the timer — and each scene has its own weather */
 const SCENES = {
+  cafe: [
+    {id:'rain',  name:'Rainy window', file:'cafe/rainy-window.mp4'},
+    {id:'night', name:'Late night',   file:'cafe/late-night.mp4'},
+    {id:'sunny', name:'Golden hour',  file:'cafe/golden-hour.mp4'}
+  ],
+  bird: [
+    {id:'garden', name:'Garden',    file:'bird/garden.mp4'},
+    {id:'meadow', name:'Meadow',    file:'bird/meadow.mp4'},
+    {id:'dawn',   name:'Dawn sky',  file:'bird/dawn-sky.mp4'}
+  ],
+  jungle: [
+    {id:'canopy', name:'Canopy',     file:'jungle/canopy.mp4'},
+    {id:'river',  name:'River',      file:'jungle/river.mp4'},
+    {id:'storm',  name:'Rainforest', file:'jungle/rainforest.mp4'}
+  ]
+};
+
+const video    = document.getElementById('sceneVideo');
+const sceneHint = document.getElementById('sceneHint');
+const scenesEl  = document.getElementById('scenes');
+const chosen    = {};                 // remembers each mode's last-picked scene
+const reducedMo = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const baseOK    = /^https?:\/\//.test(R2_BASE);
+const urlFor    = f => R2_BASE.replace(/\/?$/, '/') + f;
+
+function renderScenes(mode){
+  const list = SCENES[mode] || [];
+  scenesEl.innerHTML = list.map(s =>
+    `<button class="scene-chip" data-id="${s.id}" aria-pressed="false">${s.name}</button>`).join('');
+}
+
+function loadScene(mode, id){
+  const list = SCENES[mode] || [];
+  const sc = list.find(s => s.id === id) || list[0];
+  if(sc) chosen[mode] = sc.id;
+  [...scenesEl.children].forEach(c => c.setAttribute('aria-pressed', !!sc && c.dataset.id === sc.id));
+  if(sc && baseOK){
+    const url = urlFor(sc.file);
+    if(video.getAttribute('src') !== url){ video.src = url; video.load(); }
+    video.hidden = false; sceneHint.hidden = true;
+    if(reducedMo) video.pause(); else video.play().catch(()=>{});
+  } else {
+    video.removeAttribute('src'); video.hidden = true; sceneHint.hidden = false;
+  }
+}
+
+scenesEl.addEventListener('click', e => {
+  const b = e.target.closest('.scene-chip'); if(!b) return;
+  loadScene(sceneMode, b.dataset.id);
+});
+// a bad filename or unreachable URL falls back to the hint card
+video.addEventListener('error', () => {
+  if(video.getAttribute('src')){ video.hidden = true; sceneHint.hidden = false; }
+});
+
+/* per-mode look: tint / light / chalkboard — now layered over the scene video */
+const LOOK = {
   cafe: {
     moods:{ idle:  {tint:'rgba(10,30,40,.30)',  glow:.55, rain:1.0},
             focus: {tint:'rgba(4,16,26,.52)',   glow:.85, rain:1.35},
@@ -1071,10 +514,9 @@ const SCENES = {
 };
 let sceneMode = 'cafe';
 function setMood(m){
-  const v = SCENES[sceneMode].moods[m], r = document.documentElement.style;
+  const v = LOOK[sceneMode].moods[m], r = document.documentElement.style;
   r.setProperty('--tint', v.tint);
   r.setProperty('--glow', v.glow);
-  Glass.setIntensity(v.rain);
 }
 
 /* the soundscape that belongs to each scene, applied on switch */
@@ -1085,15 +527,15 @@ const MODE_MIX = {
 };
 
 async function switchScene(next){
-  if(next === sceneMode || !SCENES[next]) return;
+  if(next === sceneMode || !LOOK[next]) return;
   sceneMode = next;
-  const sc = SCENES[next];
+  const sc = LOOK[next];
   document.body.classList.remove('mode-cafe','mode-bird','mode-jungle');
   document.body.classList.add('mode-'+next);
   document.querySelector('.lamp').style.background = sc.lamp;
   document.querySelector('.board .chalk').textContent = sc.board;
   if(sc.tag) document.getElementById('tagline').textContent = sc.tag;
-  Glass.setScene(next);
+  renderScenes(next); loadScene(next, chosen[next]);
   // carry the sound over to match (this runs from a click, so audio may start)
   await Cafe.start();
   const mix = MODE_MIX[next];
@@ -1103,7 +545,7 @@ async function switchScene(next){
   setMood(phase === 'idle' ? 'idle' : phase);
 }
 
-Glass.init();
+renderScenes('cafe'); loadScene('cafe', chosen.cafe);
 document.body.classList.add('mode-cafe');
 document.getElementById('modes').addEventListener('click', e=>{
   const btn = e.target.closest('[data-mode]'); if(!btn) return;
