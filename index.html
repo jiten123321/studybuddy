@@ -141,14 +141,16 @@ body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,
   background:transparent;color:var(--rose);font-size:15px;cursor:pointer;transition:.25s}
 .iconbtn:hover{background:rgba(232,145,140,.12);border-color:rgba(232,145,140,.42)}
 
-/* ── Scene switcher ─────────────────────── */
-.modes{display:flex;gap:6px;padding:5px;border:1px solid var(--line);border-radius:14px;
-  background:rgba(243,233,219,.03)}
-.mode{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 6px;border-radius:10px;
-  border:none;background:transparent;color:var(--fog);cursor:pointer;font-family:var(--body);font-size:12.5px;
-  letter-spacing:.02em;transition:.22s}
-.mode .ico{font-size:15px;line-height:1;filter:saturate(1.1)}
-.mode:hover{color:var(--milk);background:rgba(243,233,219,.04)}
+/* ── Scene switcher — floats on the window itself ── */
+.modes{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:25;
+  display:flex;gap:5px;padding:5px;border-radius:16px;
+  background:rgba(6,14,18,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(243,233,219,.18);box-shadow:0 12px 34px rgba(0,0,0,.45)}
+.mode{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border-radius:11px;
+  border:none;background:transparent;color:var(--fog);cursor:pointer;font-family:var(--body);font-size:13px;
+  letter-spacing:.02em;transition:.22s;white-space:nowrap}
+.mode .ico{font-size:16px;line-height:1;filter:saturate(1.1)}
+.mode:hover{color:var(--milk);background:rgba(243,233,219,.06)}
 .mode[aria-pressed="true"]{background:var(--accent-wash);color:var(--sodium-soft);
   box-shadow:inset 0 0 0 1px var(--accent-line)}
 
@@ -273,8 +275,13 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
 <div class="shell">
 
   <!-- ═══ The window ═══ -->
-  <section class="scene" aria-hidden="true">
-    <canvas id="glassCanvas"></canvas>
+  <section class="scene">
+    <div class="modes" id="modes" role="group" aria-label="Choose a scene">
+      <button class="mode" data-mode="cafe" aria-pressed="true"><span class="ico">☕</span>Café</button>
+      <button class="mode" data-mode="bird" aria-pressed="false"><span class="ico">🐦</span>Bird</button>
+      <button class="mode" data-mode="jungle" aria-pressed="false"><span class="ico">🌿</span>Jungle</button>
+    </div>
+    <canvas id="glassCanvas" aria-hidden="true"></canvas>
     <div class="tint"></div>
     <div class="lamp"></div>
     <div class="fog"></div>
@@ -495,12 +502,6 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
         <p id="tagline">Corner table, rain outside, your laptop. Pick a length, press start, and the café stays open.</p>
       </div>
       <button class="iconbtn" id="noteBtn" title="A note for you" aria-label="Open the note">♥</button>
-    </div>
-
-    <div class="modes" id="modes" role="group" aria-label="Choose a scene">
-      <button class="mode" data-mode="cafe" aria-pressed="true"><span class="ico">☕</span>Café</button>
-      <button class="mode" data-mode="bird" aria-pressed="false"><span class="ico">🐦</span>Garden</button>
-      <button class="mode" data-mode="jungle" aria-pressed="false"><span class="ico">🌿</span>Jungle</button>
     </div>
 
     <div class="timer">
