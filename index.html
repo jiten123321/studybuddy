@@ -164,9 +164,9 @@ body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,
 .fsbtn[aria-pressed="true"]{background:var(--accent-wash);color:var(--sodium-soft)}
 
 /* video scene background + empty-state hint */
-.scenevid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#060f14;z-index:0;
-  opacity:1;transition:opacity .45s ease}
-.scenevid.loading{opacity:0}
+.scenevid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:transparent;z-index:0;
+  opacity:0;transition:opacity .6s ease}
+.scenevid.show{opacity:1}
 /* respect the hidden attribute (class display: props would otherwise keep these visible) */
 .scenehint[hidden],.scenevid[hidden],.scene-loader[hidden]{display:none!important}
 /* clean video — no café window chrome, every mode is just the looping clip */
@@ -331,12 +331,12 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
     </div>
     <div class="scenes" id="scenes" role="group" aria-label="Choose a scene view"></div>
     <button class="fsbtn" id="fsBtn" title="Full window" aria-label="Hide controls for a full-window view" aria-pressed="false">⛶</button>
-    <video id="sceneVideo" class="scenevid" autoplay loop muted playsinline aria-hidden="true"></video>
+    <video id="sceneA" class="scenevid" autoplay loop muted playsinline aria-hidden="true"></video>
+    <video id="sceneB" class="scenevid" autoplay loop muted playsinline aria-hidden="true"></video>
     <div class="scene-loader" id="sceneLoader" hidden aria-hidden="true"></div>
     <div class="scenehint" id="sceneHint" hidden>
-      <div class="chalk">No scene video yet</div>
-      <p id="hintDiag">checking…</p>
-      <p>build v3 · R2_BASE = <code id="hintBase">?</code></p>
+      <div class="chalk">Scene unavailable</div>
+      <p id="hintDiag">This clip could not load. Try another scene.</p>
     </div>
     <div class="tint"></div>
     <div class="lamp"></div>
@@ -472,15 +472,20 @@ const SCENES = {
   ]
 };
 
-const video      = document.getElementById('sceneVideo');
+const vids        = [document.getElementById('sceneA'), document.getElementById('sceneB')];
 const sceneHint   = document.getElementById('sceneHint');
+const hintDiag    = document.getElementById('hintDiag');
 const sceneLoader = document.getElementById('sceneLoader');
 const scenesEl    = document.getElementById('scenes');
-const chosen    = {};                 // remembers each mode's last-picked scene
-const reducedMo = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const baseOK    = /^https?:\/\//.test(R2_BASE);
-const urlFor    = f => R2_BASE.replace(/\/?$/, '/') + f;
-try{ document.getElementById('hintBase').textContent = R2_BASE || '(empty)'; }catch(e){}
+const chosen      = {};                 // remembers each mode's last-picked scene
+const reducedMo   = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const baseOK      = /^https?:\/\//.test(R2_BASE);
+const urlFor      = f => R2_BASE.replace(/\/?$/, '/') + f;
+
+let front = vids[0];        // the video currently shown
+let loadingVid = null;      // the video buffering an incoming scene
+
+function setBusy(b){ sceneLoader.hidden = !b; }
 
 function renderScenes(mode){
   const list = SCENES[mode] || [];
@@ -488,38 +493,60 @@ function renderScenes(mode){
     `<button class="scene-chip" data-id="${s.id}" aria-pressed="false">${s.name}</button>`).join('');
 }
 
-function setBusy(b){ sceneLoader.hidden = !b; video.classList.toggle('loading', b); }
-
 function loadScene(mode, id){
   const list = SCENES[mode] || [];
   const sc = list.find(s => s.id === id) || list[0];
   if(sc) chosen[mode] = sc.id;
   [...scenesEl.children].forEach(c => c.setAttribute('aria-pressed', !!sc && c.dataset.id === sc.id));
-  if(sc && baseOK){
-    const url = urlFor(sc.file);
-    if(video.getAttribute('src') !== url){ setBusy(true); video.src = url; video.load(); }
-    video.hidden = false; sceneHint.hidden = true;
-    if(reducedMo) video.pause(); else video.play().catch(()=>{});
-  } else {
-    setBusy(false); video.removeAttribute('src'); video.hidden = true; sceneHint.hidden = false;
-    try{ document.getElementById('hintDiag').textContent = baseOK ? ('No video listed for '+mode+'.') : 'R2_BASE is EMPTY in this deployed build.'; }catch(e){}
+
+  if(!(sc && baseOK)){                        // nothing playable -> show the hint
+    loadingVid = null; setBusy(false);
+    vids.forEach(v => { v.classList.remove('show'); v.removeAttribute('src'); });
+    sceneHint.hidden = false;
+    if(hintDiag) hintDiag.textContent = baseOK ? ('No video listed for ' + mode + '.')
+                                               : 'R2_BASE is not set in this build.';
+    return;
   }
+
+  const url = urlFor(sc.file);
+  if(front.getAttribute('src') === url && front.classList.contains('show')){
+    sceneHint.hidden = true; setBusy(false); return;      // already showing this clip
+  }
+  const back = (front === vids[0]) ? vids[1] : vids[0];
+  loadingVid = back;
+  sceneHint.hidden = true;
+  setBusy(true);                                          // spinner while it buffers; old clip keeps playing
+  back.src = url; back.load();
+  back.play().catch(()=>{});
 }
+
+// crossfade the incoming clip in over the outgoing one, then pause the old
+function reveal(v){
+  if(v !== loadingVid) return;
+  loadingVid = null; setBusy(false); sceneHint.hidden = true;
+  const old = front;
+  v.style.zIndex = '1'; if(old !== v) old.style.zIndex = '0';
+  v.classList.add('show');
+  front = v;
+  if(old !== v) setTimeout(() => { old.classList.remove('show'); try{ old.pause(); }catch(e){} }, 700);
+}
+
+vids.forEach(v => {
+  ['playing','canplay','loadeddata'].forEach(ev => v.addEventListener(ev, () => reveal(v)));
+  ['waiting','stalled'].forEach(ev => v.addEventListener(ev, () => { if(v === loadingVid) setBusy(true); }));
+  v.addEventListener('error', () => {
+    if(v !== loadingVid) return;
+    loadingVid = null; setBusy(false);
+    if(v.getAttribute('src')){
+      sceneHint.hidden = false;
+      if(hintDiag) hintDiag.textContent = 'This clip could not load. Try another scene.';
+    }
+  });
+});
 
 scenesEl.addEventListener('click', e => {
   const b = e.target.closest('.scene-chip'); if(!b) return;
   loadScene(sceneMode, b.dataset.id);
-});
-// buffering → spinner; ready → fade the clip in
-['loadstart','waiting','stalled'].forEach(ev => video.addEventListener(ev, () => { if(video.getAttribute('src')) setBusy(true); }));
-['playing','canplay','loadeddata'].forEach(ev => video.addEventListener(ev, () => setBusy(false)));
-// a bad filename or unreachable URL falls back to the hint card
-video.addEventListener('error', () => {
-  setBusy(false);
-  if(video.getAttribute('src')){
-    video.hidden = true; sceneHint.hidden = false;
-    try{ document.getElementById('hintDiag').textContent = 'Video FAILED to load: ' + (video.currentSrc||video.getAttribute('src')) + (video.error ? ' (code '+video.error.code+')' : ''); }catch(e){}
-  }
 });
 
 /* per-mode look: tint / light / chalkboard — now layered over the scene video */
