@@ -169,6 +169,8 @@ body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,
 .scenevid.loading{opacity:0}
 /* respect the hidden attribute (class display: props would otherwise keep these visible) */
 .scenehint[hidden],.scenevid[hidden],.scene-loader[hidden]{display:none!important}
+/* clean video — no café window chrome, every mode is just the looping clip */
+.tint,.lamp,.fog,.vignette,.grain,.frame,.board{display:none!important}
 .scene-loader{position:absolute;top:50%;left:50%;width:46px;height:46px;margin:-23px 0 0 -23px;z-index:2;
   border-radius:50%;border:3px solid rgba(243,233,219,.16);border-top-color:var(--sodium);
   animation:spin .8s linear infinite}
@@ -445,28 +447,28 @@ const R2_BASE = 'https://pub-8b10b2b9672041afa1db15de8815b6bc.r2.dev/';   // stu
 const SCENES = {
   cafe: [
     {id:'cafe1', name:'Café 1', file:'cafe/cafe.mp4'},
-    {id:'cafe2', name:'Café 2', file:'cafe/cafe2.mp4'},
-    {id:'cafe3', name:'Café 3', file:'cafe/cafe6.mp4'},
-    {id:'cafe4', name:'Café 4', file:'cafe/cafe7.mp4'},
-    {id:'cafe5', name:'Café 5', file:'cafe/cafe8.mp4'}
+    {id:'cafe7', name:'Café 2', file:'cafe/cafe7.mp4'},
+    {id:'cafe6', name:'Café 3', file:'cafe/cafe6.mp4'},
+    {id:'cafe2', name:'Café 4', file:'cafe/cafe2.mp4'},
+    {id:'cafe8', name:'Café 5', file:'cafe/cafe8.mp4'}
   ],
   bird: [
-    {id:'bird1', name:'Bird 1', file:'Bird/1287-145131537.mp4'},
-    {id:'bird2', name:'Bird 2', file:'Bird/140111-774507949.mp4'},
-    {id:'bird3', name:'Bird 3', file:'Bird/172986-848188095.mp4'},
-    {id:'bird4', name:'Bird 4', file:'Bird/200427-912684284.mp4'},
-    {id:'bird5', name:'Bird 5', file:'Bird/225929.mp4'},
-    {id:'bird6', name:'Bird 6', file:'Bird/25096-347958089.mp4'},
-    {id:'bird7', name:'Bird 7', file:'Bird/265501.mp4'},
-    {id:'bird8', name:'Bird 8', file:'Bird/29529-376565555.mp4'},
-    {id:'bird9', name:'Bird 9', file:'Bird/326249.mp4'},
-    {id:'bird10', name:'Bird 10', file:'Bird/77784-564423242.mp4'}
+    {id:'b77784',  name:'Bird 1',  file:'Bird/77784-564423242.mp4'},
+    {id:'b25096',  name:'Bird 2',  file:'Bird/25096-347958089.mp4'},
+    {id:'b172986', name:'Bird 3',  file:'Bird/172986-848188095.mp4'},
+    {id:'b29529',  name:'Bird 4',  file:'Bird/29529-376565555.mp4'},
+    {id:'b225929', name:'Bird 5',  file:'Bird/225929.mp4'},
+    {id:'b140111', name:'Bird 6',  file:'Bird/140111-774507949.mp4'},
+    {id:'b200427', name:'Bird 7',  file:'Bird/200427-912684284.mp4'},
+    {id:'b326249', name:'Bird 8',  file:'Bird/326249.mp4'},
+    {id:'b265501', name:'Bird 9',  file:'Bird/265501.mp4'},
+    {id:'b1287',   name:'Bird 10', file:'Bird/1287-145131537.mp4'}
   ],
   jungle: [
-    {id:'jungle1', name:'Jungle 1', file:'jungle/109726-685086332.mp4'},
-    {id:'jungle2', name:'Jungle 2', file:'jungle/132204-752663087.mp4'},
-    {id:'jungle3', name:'Jungle 3', file:'jungle/239782.mp4'},
-    {id:'jungle4', name:'Jungle 4', file:'jungle/37088-413229662.mp4'}
+    {id:'j37088',  name:'Jungle 1', file:'jungle/37088-413229662.mp4'},
+    {id:'j109726', name:'Jungle 2', file:'jungle/109726-685086332.mp4'},
+    {id:'j132204', name:'Jungle 3', file:'jungle/132204-752663087.mp4'},
+    {id:'j239782', name:'Jungle 4', file:'jungle/239782.mp4'}
   ]
 };
 
