@@ -320,6 +320,10 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
   </defs>
 </svg>
 
+<audio id="sndRain"   loop preload="auto" src="dragon-studio-relaxing-rain-444802.mp3"></audio>
+<audio id="sndBirds"  loop preload="auto" src="wr-sound-library-bird-soundchirping-light-no-copyright-550314.mp3"></audio>
+<audio id="sndJungle" loop preload="auto" src="soundreality-nature-forest-sound-537925.mp3"></audio>
+
 <div class="shell">
 
   <!-- ═══ The window ═══ -->
@@ -584,9 +588,9 @@ function setMood(m){
 
 /* the soundscape that belongs to each scene, applied on switch */
 const MODE_MIX = {
-  cafe:   {rain:.50, cafe:.22, hum:.12},
-  bird:   {leaves:.30, birds:.55, hum:.10},
-  jungle: {rain:.30, leaves:.34, bugs:.55, birds:.16, hum:.14}
+  cafe:   {rain:.85},
+  bird:   {birds:.85},
+  jungle: {jungle:.85}
 };
 
 async function switchScene(next){
@@ -686,24 +690,8 @@ const Cafe = (function(){
     verb = ctx.createConvolver(); verb.buffer = roomIR(2.1, 2.4);
     verbSend = g(0.26); verb.connect(verbSend); verbSend.connect(comp);
 
-    /* ── RAIN ─────────────────────────────── */
+    /* ── RAIN — real audio loop (mp3), wired further below ── */
     L.rain = g(0);
-    { // hiss, decorrelated left and right so it sits around her instead of inside her head
-      [-0.75, 0.75].forEach((p,i)=>{
-        const hp = ctx.createBiquadFilter(), lp = ctx.createBiquadFilter();
-        hp.type='highpass'; hp.frequency.value = 900;
-        lp.type='lowpass';  lp.frequency.value = 6400;  lp.Q.value = 0.4;
-        const gust = ctx.createOscillator(), ga = g(1500);
-        gust.frequency.value = 0.045 + i*0.013; gust.connect(ga); ga.connect(lp.frequency); gust.start();
-        const s = src(whiteBuf, 0.97 + i*0.05), lvl = g(0.30), pn = pan(p);
-        if(pn) chain(s, hp, lp, lvl, pn, L.rain); else chain(s, hp, lp, lvl, L.rain);
-      });
-      // body — the low wash of water on the street
-      const lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 620;
-      chain(src(brownBuf, 0.9), lp, g(0.42), L.rain);
-      // a little of it in the room
-      const send = g(0.18); L.rain.connect(send); send.connect(verb);
-    }
     L.rain.connect(comp);
 
     /* ── CAFÉ ─────────────────────────────── */
@@ -776,8 +764,25 @@ const Cafe = (function(){
        control-only gains: the scheduler reads their
        level to decide how often, and how loud, to
        fire the live chirps and trills below. */
-    L.birds = g(0);
-    L.bugs  = g(0);
+    L.birds  = g(0);
+    L.bugs   = g(0);
+    L.jungle = g(0);
+    L.birds.connect(comp);
+    L.jungle.connect(comp);
+
+    /* ── REAL AUDIO LOOPS — rain / birdsong / jungle mp3s ──
+       Each mp3 streams through its layer gain, so the mixer
+       sliders, master volume and compressor all still apply.
+       They loop forever; each mode just fades its own one up. */
+    [['sndRain', L.rain], ['sndBirds', L.birds], ['sndJungle', L.jungle]].forEach(([id, gainNode])=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      try{
+        ctx.createMediaElementSource(el).connect(gainNode);
+        el.loop = true; el.volume = 1;
+        el.play().catch(()=>{});
+      }catch(e){}
+    });
 
     startScheduler();
   }
@@ -858,37 +863,15 @@ const Cafe = (function(){
   function startScheduler(){
     sched = setInterval(()=>{
       const now = ctx.currentTime;
-      const rain = L.rain.gain.value, cafe = L.cafe.gain.value, fire = L.fire.gain.value;
-      const birdLvl = L.birds ? L.birds.gain.value : 0, bugLvl = L.bugs ? L.bugs.gain.value : 0;
+      const cafe = L.cafe.gain.value, fire = L.fire.gain.value;
+      const bugLvl = L.bugs ? L.bugs.gain.value : 0;
 
-      // birdsong — phrases spaced further apart when quieter
-      if(birdLvl > 0.02 && now > nextBird){
-        chirp(birdLvl);
-        if(Math.random() < 0.3*birdLvl) setTimeout(()=> chirp(birdLvl*0.8), 180 + Math.random()*260);
-        nextBird = now + (0.6 + Math.random()*3.4) / (0.4 + birdLvl);
-      }
       // crickets — a steady chorus of overlapping trills
       if(bugLvl > 0.02 && now > nextBug){
         cricket(bugLvl, (Math.random()*2-1)*0.7);
         nextBug = now + (0.14 + Math.random()*0.5) / (0.5 + bugLvl);
       }
 
-      // rain impacts — the patter that makes it read as real rain
-      if(rain > 0.02){
-        const rate = 6 + rain*46;                       // drops per second
-        if(now > nextDrop){
-          const n = 1 + Math.floor(Math.random()*2);
-          for(let i=0;i<n;i++){
-            const heavy = Math.random() < 0.13;
-            burst({ freq: heavy ? 500 + Math.random()*700 : 1600 + Math.random()*3600,
-                    q: heavy ? 1.2 : 2.6,
-                    vol: (heavy ? 0.09 : 0.035) * rain * (0.5 + Math.random()),
-                    dur: heavy ? 0.10 : 0.035,
-                    p: (Math.random()*2-1)*0.9, send: 0.12 });
-          }
-          nextDrop = now + (1/rate) * (0.4 + Math.random()*1.3);
-        }
-      }
       // fireplace crackles, sometimes in clusters
       if(fire > 0.02 && now > nextCrackle){
         const cluster = Math.random() < 0.22 ? 2 + Math.floor(Math.random()*4) : 1;
@@ -950,10 +933,11 @@ const Cafe = (function(){
 
 const LAYERS = [
   {id:'rain',   name:'Rain on glass'},
+  {id:'birds',  name:'Birdsong'},
+  {id:'jungle', name:'Jungle'},
   {id:'cafe',   name:'Café murmur'},
   {id:'fire',   name:'Fireplace'},
   {id:'leaves', name:'Leaves & wind'},
-  {id:'birds',  name:'Birdsong'},
   {id:'bugs',   name:'Crickets'},
   {id:'noise',  name:'Soft noise'},
   {id:'hum',    name:'Warm hum'}
