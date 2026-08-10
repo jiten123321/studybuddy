@@ -30,7 +30,16 @@
 
   --tint:rgba(10,30,40,.30);
   --glow:.55;
+
+  /* accent wash — retinted per scene mode below */
+  --accent-wash:rgba(255,180,84,.14);
+  --accent-line:rgba(255,180,84,.45);
 }
+/* per-scene accent + light identity */
+body.mode-bird{--sodium:#f4c95d;--sodium-soft:#ffe6ad;
+  --accent-wash:rgba(244,201,93,.16);--accent-line:rgba(244,201,93,.48)}
+body.mode-jungle{--sodium:#8ad38f;--sodium-soft:#c8efcb;
+  --accent-wash:rgba(138,211,143,.16);--accent-line:rgba(138,211,143,.48)}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -112,6 +121,17 @@ body{
   background:transparent;color:var(--rose);font-size:15px;cursor:pointer;transition:.25s}
 .iconbtn:hover{background:rgba(232,145,140,.12);border-color:rgba(232,145,140,.42)}
 
+/* ── Scene switcher ─────────────────────── */
+.modes{display:flex;gap:6px;padding:5px;border:1px solid var(--line);border-radius:14px;
+  background:rgba(243,233,219,.03)}
+.mode{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 6px;border-radius:10px;
+  border:none;background:transparent;color:var(--fog);cursor:pointer;font-family:var(--body);font-size:12.5px;
+  letter-spacing:.02em;transition:.22s}
+.mode .ico{font-size:15px;line-height:1;filter:saturate(1.1)}
+.mode:hover{color:var(--milk);background:rgba(243,233,219,.04)}
+.mode[aria-pressed="true"]{background:var(--accent-wash);color:var(--sodium-soft);
+  box-shadow:inset 0 0 0 1px var(--accent-line)}
+
 .timer{border:1px solid var(--line);border-radius:18px;padding:24px 22px 20px;text-align:center;
   background:radial-gradient(125% 95% at 50% 0%,rgba(255,180,84,.10),transparent 72%)}
 .phase{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--sodium)}
@@ -131,7 +151,7 @@ body{
 .chip{padding:6px 12px;border-radius:20px;background:transparent;cursor:pointer;border:1px solid var(--line);
   color:var(--fog);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;transition:.2s}
 .chip:hover{color:var(--milk)}
-.chip[aria-pressed="true"]{background:rgba(255,180,84,.14);border-color:rgba(255,180,84,.45);color:var(--sodium-soft)}
+.chip[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent-line);color:var(--sodium-soft)}
 
 .sec{border-top:1px solid var(--line);padding-top:20px}
 .sec h2{margin:0 0 14px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;
@@ -361,6 +381,12 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
       <button class="iconbtn" id="noteBtn" title="A note for you" aria-label="Open the note">♥</button>
     </div>
 
+    <div class="modes" id="modes" role="group" aria-label="Choose a scene">
+      <button class="mode" data-mode="cafe" aria-pressed="true"><span class="ico">☕</span>Café</button>
+      <button class="mode" data-mode="bird" aria-pressed="false"><span class="ico">🐦</span>Garden</button>
+      <button class="mode" data-mode="jungle" aria-pressed="false"><span class="ico">🌿</span>Jungle</button>
+    </div>
+
     <div class="timer">
       <div class="phase" id="phase">Ready when you are</div>
       <div class="clock" id="clock">25:00</div>
@@ -383,7 +409,7 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
     </div>
 
     <div class="sec">
-      <h2>The café sound <span id="soundState">off</span></h2>
+      <h2>The sound <span id="soundState">off</span></h2>
       <div class="presets" id="presets">
         <button class="chip" data-preset="rain">RAINY WINDOW</button>
         <button class="chip" data-preset="cafe">BUSY CAFÉ</button>
@@ -438,9 +464,17 @@ const Glass = (function(){
   const soft = document.createElement('canvas');     // pre-blurred street
   const sc = soft.getContext('2d');
   let W = 0, H = 0, dpr = 1;
-  let drops = [], streaks = [];
+  let drops = [], streaks = [], birds = [], flies = [], motes = [];
   let intensity = 1, raf = null, last = 0;
+  let mode = 'cafe';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // how much of each element lives in each scene
+  const SCENE_CFG = {
+    cafe:   {drops:120, streaks:90, birds:0, flies:0,  motes:0 },
+    bird:   {drops:0,   streaks:0,  birds:5, flies:0,  motes:26},
+    jungle: {drops:55,  streaks:46, birds:0, flies:22, motes:0 }
+  };
 
   // deterministic noise so a resize doesn't reshuffle the city
   let seed = 20260810;
@@ -506,6 +540,118 @@ const Glass = (function(){
     });
   }
 
+  /* GARDEN — a bright morning sky beyond the glass */
+  function drawGarden(w,h){
+    seed = 20260810;
+    const g = bgc.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#a7d4ea'); g.addColorStop(.5,'#d8ecdd');
+    g.addColorStop(.72,'#f4ead0'); g.addColorStop(1,'#cdd6a4');
+    bgc.fillStyle = g; bgc.fillRect(0,0,w,h);
+
+    // low sun, upper right, hazing the sky around it
+    const sx = w*0.74, sy = h*0.22, R = Math.max(w,h);
+    const sun = bgc.createRadialGradient(sx, sy, 4, sx, sy, R*0.55);
+    sun.addColorStop(0,'rgba(255,251,232,.95)');
+    sun.addColorStop(.10,'rgba(255,240,190,.55)');
+    sun.addColorStop(.36,'rgba(255,236,182,.14)');
+    sun.addColorStop(1,'rgba(255,236,182,0)');
+    bgc.fillStyle = sun; bgc.fillRect(0,0,w,h);
+    bgc.fillStyle = 'rgba(255,253,240,.95)';
+    bgc.beginPath(); bgc.arc(sx, sy, 26, 0, 7); bgc.fill();
+
+    // soft clouds
+    for(let i=0;i<5;i++){
+      const cx = rnd()*w, cy = h*(0.08+rnd()*0.32), cw = 90+rnd()*170, ch = 22+rnd()*24;
+      const cg = bgc.createRadialGradient(cx, cy, 4, cx, cy, cw*0.6);
+      cg.addColorStop(0,'rgba(255,255,255,.85)'); cg.addColorStop(1,'rgba(255,255,255,0)');
+      bgc.fillStyle = cg;
+      for(let k=0;k<4;k++){
+        bgc.beginPath();
+        bgc.ellipse(cx+(rnd()-.5)*cw, cy+(rnd()-.5)*ch, cw*(0.3+rnd()*0.3), ch*(0.6+rnd()*0.5), 0, 0, 7);
+        bgc.fill();
+      }
+    }
+    // rolling hills / distant treeline
+    ['rgba(150,178,128,.55)','rgba(112,152,98,.72)','rgba(74,116,70,.92)'].forEach((c,layer)=>{
+      const base = h*(0.6+layer*0.11);
+      bgc.fillStyle = c; bgc.beginPath(); bgc.moveTo(0,h); bgc.lineTo(0,base);
+      let x = 0;
+      while(x < w){ const st = 40+rnd()*80; bgc.quadraticCurveTo(x+st/2, base-(10+rnd()*38*(layer+1)), x+st, base); x += st; }
+      bgc.lineTo(w,h); bgc.closePath(); bgc.fill();
+    });
+    // a foreground branch reaching in from the top-left, with leaves
+    bgc.strokeStyle = '#2a2018'; bgc.lineCap = 'round';
+    bgc.lineWidth = 15; bgc.beginPath();
+    bgc.moveTo(-12,-12); bgc.quadraticCurveTo(w*0.16, h*0.05, w*0.35, h*0.15); bgc.stroke();
+    bgc.lineWidth = 6;
+    [[0.15,0.055],[0.23,0.10],[0.30,0.125]].forEach(([tx,ty])=>{
+      bgc.beginPath(); bgc.moveTo(w*tx, h*ty);
+      bgc.quadraticCurveTo(w*(tx+0.02), h*(ty-0.07), w*(tx+0.05), h*(ty-0.13)); bgc.stroke();
+    });
+    for(let i=0;i<30;i++){
+      const t = rnd(), bx = w*(0.03+t*0.33), by = h*(t*0.15) - rnd()*44;
+      bgc.save(); bgc.translate(bx, by); bgc.rotate(rnd()*6);
+      const lg = bgc.createLinearGradient(-8,0,8,0);
+      lg.addColorStop(0,'#3d6b40'); lg.addColorStop(1,'#71a56c');
+      bgc.fillStyle = lg; bgc.beginPath();
+      bgc.ellipse(0,0, 5+rnd()*6, 10+rnd()*8, 0, 0, 7); bgc.fill(); bgc.restore();
+    }
+  }
+
+  /* JUNGLE — dense, misty rainforest beyond the glass */
+  function drawJungle(w,h){
+    seed = 20260810;
+    const g = bgc.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#0c2417'); g.addColorStop(.5,'#123520'); g.addColorStop(1,'#0a1f14');
+    bgc.fillStyle = g; bgc.fillRect(0,0,w,h);
+
+    // blobby depth layers of foliage
+    ['#16402a','#1c5030','#276039'].forEach((c,layer)=>{
+      bgc.fillStyle = c;
+      for(let i=0;i<10+layer*7;i++){
+        const cx = rnd()*w, cy = rnd()*h, r = 40+rnd()*120*(layer*0.5+1);
+        bgc.beginPath(); bgc.ellipse(cx, cy, r, r*(0.6+rnd()*0.4), rnd()*6, 0, 7); bgc.fill();
+      }
+    });
+    // shafts of light coming down through the canopy
+    bgc.save(); bgc.globalCompositeOperation = 'screen';
+    for(let i=0;i<3;i++){
+      const x = w*(0.22+i*0.29) + (rnd()-.5)*70;
+      const sg = bgc.createLinearGradient(x, 0, x-90, h);
+      sg.addColorStop(0,'rgba(214,242,172,.22)'); sg.addColorStop(1,'rgba(214,242,172,0)');
+      bgc.fillStyle = sg; bgc.beginPath();
+      bgc.moveTo(x-30,0); bgc.lineTo(x+42,0); bgc.lineTo(x-64,h); bgc.lineTo(x-158,h);
+      bgc.closePath(); bgc.fill();
+    }
+    bgc.restore();
+    // horizontal mist bands
+    for(let i=0;i<4;i++){
+      const my = h*(0.4+i*0.14);
+      const mg = bgc.createLinearGradient(0, my-30, 0, my+30);
+      mg.addColorStop(0,'rgba(192,222,202,0)'); mg.addColorStop(.5,'rgba(192,222,202,.13)');
+      mg.addColorStop(1,'rgba(192,222,202,0)');
+      bgc.fillStyle = mg; bgc.fillRect(0, my-30, w, 60);
+    }
+    // big leaf silhouettes framing the edges
+    const leaf = (cx,cy,s,rot,col)=>{
+      bgc.save(); bgc.translate(cx,cy); bgc.rotate(rot); bgc.fillStyle = col;
+      bgc.beginPath(); bgc.moveTo(0,0);
+      bgc.quadraticCurveTo(s*0.5,-s*0.42, 0,-s); bgc.quadraticCurveTo(-s*0.5,-s*0.42, 0,0); bgc.fill();
+      bgc.strokeStyle = 'rgba(8,24,16,.5)'; bgc.lineWidth = Math.max(1, s*0.03);
+      bgc.beginPath(); bgc.moveTo(0,0); bgc.lineTo(0,-s*0.9); bgc.stroke();
+      bgc.restore();
+    };
+    leaf(w*0.02, h*0.0,  220, 2.4, '#0e2c1b'); leaf(w*0.12, -20, 180, 3.0, '#123420');
+    leaf(w*0.98, h*0.02, 240,-2.4, '#0e2c1b'); leaf(w*0.90, -10, 180,-3.0, '#123420');
+    leaf(w*0.20, h,      260, 0.3, '#0c2417'); leaf(w*0.80, h,     240,-0.3, '#0c2417');
+  }
+
+  function drawSceneBG(){
+    if(mode === 'bird') drawGarden(W,H);
+    else if(mode === 'jungle') drawJungle(W,H);
+    else drawStreet(W,H);
+  }
+
   // blur by downscaling and back up — works everywhere, costs nothing after setup
   function blurStreet(w,h){
     const f = 14;
@@ -525,10 +671,18 @@ const Glass = (function(){
     W = r.width; H = r.height;
     [cv, bg, soft].forEach(c => { c.width = W*dpr; c.height = H*dpr; });
     [ctx, bgc, sc].forEach(c => c.setTransform(dpr,0,0,dpr,0,0));
-    drawStreet(W,H); blurStreet(W,H);
-    drops = []; streaks = [];
-    for(let i=0;i<120;i++) drops.push(newDrop(true));
-    for(let i=0;i<90;i++) streaks.push(newStreak(true));
+    drawSceneBG(); blurStreet(W,H);
+    seedParticles();
+  }
+
+  function seedParticles(){
+    const cfg = SCENE_CFG[mode];
+    drops = []; streaks = []; birds = []; flies = []; motes = [];
+    for(let i=0;i<cfg.drops;i++)   drops.push(newDrop(true));
+    for(let i=0;i<cfg.streaks;i++) streaks.push(newStreak(true));
+    for(let i=0;i<cfg.birds;i++)   birds.push(newBird(true));
+    for(let i=0;i<cfg.flies;i++)   flies.push(newFly());
+    for(let i=0;i<cfg.motes;i++)   motes.push(newMote());
   }
 
   function newDrop(seedIn){
@@ -549,6 +703,62 @@ const Glass = (function(){
       a: 0.10 + Math.random()*0.30,
       w: Math.random() < .3 ? 1.4 : 0.9
     };
+  }
+  // a distant bird gliding across the sky (garden mode)
+  function newBird(seedIn){
+    const dir = Math.random() < .5 ? 1 : -1;
+    return {
+      dir,
+      x: seedIn ? Math.random()*W : (dir > 0 ? -30 : W+30),
+      y: H*(0.10 + Math.random()*0.42),
+      v: 22 + Math.random()*34,
+      s: 5 + Math.random()*7,
+      ph: Math.random()*6.28,
+      fl: 6 + Math.random()*4,
+      life: Math.random()*6
+    };
+  }
+  // a firefly drifting in the undergrowth (jungle mode)
+  function newFly(){
+    return {
+      x: Math.random()*W, y: H*(0.28 + Math.random()*0.66),
+      vx: (Math.random()-.5)*12, vy: (Math.random()-.5)*9,
+      ph: Math.random()*6.28, sp: 1.4 + Math.random()*1.8,
+      r: 1.4 + Math.random()*1.6, turn: 0
+    };
+  }
+  // a speck of dust floating in the sunlight (garden mode)
+  function newMote(){
+    return {
+      x: Math.random()*W, y: Math.random()*H,
+      vx: (Math.random()-.3)*6, vy: (Math.random()-.5)*4,
+      r: 0.6 + Math.random()*1.4, a: 0.08 + Math.random()*0.22
+    };
+  }
+
+  function paintBird(b){
+    const flap = Math.sin(b.ph)*0.5 + 0.5;      // 0..1 wing raise
+    const wy = b.s*(0.35 + flap*0.85);
+    ctx.strokeStyle = 'rgba(28,38,42,.68)';
+    ctx.lineWidth = Math.max(1, b.s*0.17); ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(b.x - b.s, b.y + wy*0.25);
+    ctx.quadraticCurveTo(b.x, b.y - wy, b.x, b.y);
+    ctx.quadraticCurveTo(b.x, b.y - wy, b.x + b.s, b.y + wy*0.25);
+    ctx.stroke();
+  }
+  function paintFly(f){
+    const a = (Math.sin(f.ph)*0.5 + 0.5)*0.9;
+    const gr = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r*4);
+    gr.addColorStop(0, `rgba(196,255,150,${(a*0.8).toFixed(3)})`);
+    gr.addColorStop(1, 'rgba(196,255,150,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(f.x, f.y, f.r*4, 0, 7); ctx.fill();
+    ctx.fillStyle = `rgba(224,255,196,${a.toFixed(3)})`;
+    ctx.beginPath(); ctx.arc(f.x, f.y, f.r*0.6, 0, 7); ctx.fill();
+  }
+  function paintMote(m){
+    ctx.fillStyle = `rgba(255,250,232,${m.a.toFixed(3)})`;
+    ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, 7); ctx.fill();
   }
 
   function paintDrop(d){
@@ -637,10 +847,35 @@ const Glass = (function(){
       }
     }
     drops = drops.filter(d => d.r > 0.5 && d.y - d.r < H);
-    while(drops.length < 120 * (0.55 + intensity*0.6)) drops.push(newDrop(false));
+    while(drops.length < SCENE_CFG[mode].drops * (0.55 + intensity*0.6)) drops.push(newDrop(false));
 
     drops.sort((a,b) => a.r - b.r);
     for(const d of drops) paintDrop(d);
+
+    // birds gliding across the garden sky
+    for(const b of birds){
+      b.x += b.v * b.dir * dt;
+      b.y += Math.sin(b.life*0.6) * dt * 6;
+      b.ph += dt * b.fl; b.life += dt;
+      if((b.dir > 0 && b.x > W+40) || (b.dir < 0 && b.x < -40)) Object.assign(b, newBird(false));
+      paintBird(b);
+    }
+    // fireflies in the undergrowth
+    for(const f of flies){
+      f.turn -= dt;
+      if(f.turn <= 0){ f.vx = (Math.random()-.5)*14; f.vy = (Math.random()-.5)*11; f.turn = 0.6 + Math.random()*1.4; }
+      f.x += f.vx*dt; f.y += f.vy*dt; f.ph += dt*f.sp;
+      if(f.x < 0) f.x = W; if(f.x > W) f.x = 0;
+      if(f.y < H*0.24) f.y = H*0.24; if(f.y > H) f.y = H;
+      paintFly(f);
+    }
+    // dust motes in the sunlight
+    for(const m of motes){
+      m.x += m.vx*dt; m.y += m.vy*dt;
+      if(m.x < -4) m.x = W+4; if(m.x > W+4) m.x = -4;
+      if(m.y < -4) m.y = H+4; if(m.y > H+4) m.y = -4;
+      paintMote(m);
+    }
   }
 
   function frame(t){
@@ -663,23 +898,84 @@ const Glass = (function(){
       last = performance.now();
       raf = requestAnimationFrame(frame);
     },
-    setIntensity(v){ intensity = v; }
+    setIntensity(v){ intensity = v; },
+    setScene(m){
+      if(!SCENE_CFG[m] || m === mode) return;
+      mode = m;
+      drawSceneBG(); blurStreet(W,H);
+      seedParticles();
+      if(reduced) step(0.016);        // motion is off — repaint one static frame
+    }
   };
 })();
 
-/* mood: the weather answers the timer */
-const MOODS = {
-  idle:  {tint:'rgba(10,30,40,.30)',  glow:.55, rain:1.0},
-  focus: {tint:'rgba(4,16,26,.52)',   glow:.85, rain:1.35},
-  break: {tint:'rgba(120,150,150,.14)',glow:.30, rain:0.42}
+/* mood: the weather answers the timer — and each scene has its own weather */
+const SCENES = {
+  cafe: {
+    moods:{ idle:  {tint:'rgba(10,30,40,.30)',  glow:.55, rain:1.0},
+            focus: {tint:'rgba(4,16,26,.52)',   glow:.85, rain:1.35},
+            break: {tint:'rgba(120,150,150,.14)',glow:.30, rain:0.42} },
+    lamp:'radial-gradient(circle at 58% 42%,rgba(255,176,84,.40),rgba(255,150,60,.10) 44%,transparent 66%)',
+    board:"Ladoo's Café"
+  },
+  bird: {
+    moods:{ idle:  {tint:'rgba(150,180,150,.10)',glow:.70, rain:0},
+            focus: {tint:'rgba(120,160,130,.16)',glow:.92, rain:0},
+            break: {tint:'rgba(185,205,175,.08)',glow:.50, rain:0} },
+    lamp:'radial-gradient(circle at 72% 24%,rgba(255,244,205,.55),rgba(255,230,165,.14) 40%,transparent 64%)',
+    board:"Ladoo's Garden",
+    tag:'Windows open, morning light, birds in the garden. Pick a length and press start.'
+  },
+  jungle: {
+    moods:{ idle:  {tint:'rgba(16,50,30,.34)', glow:.40, rain:0.72},
+            focus: {tint:'rgba(8,40,24,.50)',  glow:.55, rain:0.98},
+            break: {tint:'rgba(120,160,130,.14)',glow:.25, rain:0.40} },
+    lamp:'radial-gradient(circle at 40% 20%,rgba(212,242,172,.35),rgba(150,210,120,.10) 42%,transparent 66%)',
+    board:"Ladoo's Jungle",
+    tag:'Deep green, warm rain, the whole forest breathing. Pick a length and press start.'
+  }
 };
+let sceneMode = 'cafe';
 function setMood(m){
-  const v = MOODS[m], r = document.documentElement.style;
+  const v = SCENES[sceneMode].moods[m], r = document.documentElement.style;
   r.setProperty('--tint', v.tint);
   r.setProperty('--glow', v.glow);
   Glass.setIntensity(v.rain);
 }
+
+/* the soundscape that belongs to each scene, applied on switch */
+const MODE_MIX = {
+  cafe:   {rain:.50, cafe:.22, hum:.12},
+  bird:   {leaves:.30, birds:.55, hum:.10},
+  jungle: {rain:.30, leaves:.34, bugs:.55, birds:.16, hum:.14}
+};
+
+async function switchScene(next){
+  if(next === sceneMode || !SCENES[next]) return;
+  sceneMode = next;
+  const sc = SCENES[next];
+  document.body.classList.remove('mode-cafe','mode-bird','mode-jungle');
+  document.body.classList.add('mode-'+next);
+  document.querySelector('.lamp').style.background = sc.lamp;
+  document.querySelector('.board .chalk').textContent = sc.board;
+  if(sc.tag) document.getElementById('tagline').textContent = sc.tag;
+  Glass.setScene(next);
+  // carry the sound over to match (this runs from a click, so audio may start)
+  await Cafe.start();
+  const mix = MODE_MIX[next];
+  LAYERS.forEach(l => applyLevel(l.id, mix[l.id] || 0));
+  [...document.querySelectorAll('#presets .chip')].forEach(c => c.setAttribute('aria-pressed','false'));
+  reflectSound();
+  setMood(phase === 'idle' ? 'idle' : phase);
+}
+
 Glass.init();
+document.body.classList.add('mode-cafe');
+document.getElementById('modes').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-mode]'); if(!btn) return;
+  [...e.currentTarget.children].forEach(c => c.setAttribute('aria-pressed', c === btn));
+  switchScene(btn.dataset.mode);
+});
 
 /* ══════════════════════════════════════════════════
    2. THE SOUND — synthesised live, nothing loops
@@ -692,7 +988,7 @@ Glass.init();
 const Cafe = (function(){
   let ctx, master, comp, verb, verbSend, whiteBuf, brownBuf, pinkBuf;
   const L = {};                       // layer gains
-  let started = false, sched = null, nextDrop = 0, nextEvent = 0, nextCrackle = 0;
+  let started = false, sched = null, nextDrop = 0, nextEvent = 0, nextCrackle = 0, nextBird = 0, nextBug = 0;
 
   const noise = (fn, secs=8) => {
     const len = ctx.sampleRate*secs, b = ctx.createBuffer(2, len, ctx.sampleRate);
@@ -824,7 +1120,70 @@ const Cafe = (function(){
     }
     L.hum.connect(comp);
 
+    /* ── LEAVES — wind moving through a canopy ── */
+    L.leaves = g(0);
+    { [-0.5, 0.5].forEach((p,i)=>{
+        const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = 2200 + i*700; bp.Q.value = 0.5;
+        const trem = ctx.createOscillator(), ta = g(0.4), lvl = g(0.5);
+        trem.frequency.value = 0.12 + i*0.05; trem.connect(ta); ta.connect(lvl.gain); trem.start();
+        const s = src(pinkBuf, 0.9 + i*0.12), pn = pan(p);
+        if(pn) chain(s, bp, lvl, pn, L.leaves); else chain(s, bp, lvl, L.leaves);
+      });
+      const send = g(0.3); L.leaves.connect(send); send.connect(verb);
+    }
+    L.leaves.connect(comp);
+
+    /* ── BIRDS & CRICKETS ─────────────────────
+       control-only gains: the scheduler reads their
+       level to decide how often, and how loud, to
+       fire the live chirps and trills below. */
+    L.birds = g(0);
+    L.bugs  = g(0);
+
     startScheduler();
+  }
+
+  // one live bird phrase — a few glided notes, never the same twice
+  function chirp(amp){
+    const t0 = ctx.currentTime;
+    const base = 1800 + Math.random()*2600, notes = 2 + (Math.random()*4|0);
+    const p = (Math.random()*2-1)*0.7;
+    let t = t0;
+    for(let i=0;i<notes;i++){
+      const o = ctx.createOscillator(); o.type = Math.random()<.5 ? 'sine' : 'triangle';
+      const f0 = base*(0.8 + Math.random()*0.5), f1 = f0*(1 + (Math.random()-0.4)*0.8);
+      const dur = 0.05 + Math.random()*0.11;
+      o.frequency.setValueAtTime(f0, t);
+      o.frequency.exponentialRampToValueAtTime(Math.max(220, f1), t + dur);
+      const gn = g(0), v = (0.05 + Math.random()*0.08) * amp;
+      gn.gain.setValueAtTime(0.0001, t);
+      gn.gain.exponentialRampToValueAtTime(v, t + 0.008);
+      gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      const pn = pan(p);
+      o.connect(gn);
+      if(pn){ gn.connect(pn); pn.connect(comp); const sd = g(0.4); pn.connect(sd); sd.connect(verb); }
+      else { gn.connect(comp); const sd = g(0.4); gn.connect(sd); sd.connect(verb); }
+      o.start(t); o.stop(t + dur + 0.05);
+      t += dur*(0.7 + Math.random()*0.9);
+    }
+  }
+  // one cricket trill — a short burst of fast pulses
+  function cricket(amp, p){
+    const t0 = ctx.currentTime;
+    const f = 3600 + Math.random()*2200, pulses = 8 + (Math.random()*14|0), rate = 0.012 + Math.random()*0.01;
+    const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = f;
+    const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = f; bp.Q.value = 12;
+    const gn = g(0); let t = t0;
+    for(let i=0;i<pulses;i++){
+      gn.gain.setValueAtTime(0.0001, t);
+      gn.gain.linearRampToValueAtTime((0.02 + Math.random()*0.02)*amp, t + rate*0.4);
+      gn.gain.linearRampToValueAtTime(0.0001, t + rate*0.9);
+      t += rate;
+    }
+    const pn = pan(p);
+    o.connect(bp); bp.connect(gn);
+    if(pn){ gn.connect(pn); pn.connect(comp); } else gn.connect(comp);
+    o.start(t0); o.stop(t + 0.05);
   }
 
   /* ── one-shot sounds ─────────────────────── */
@@ -861,6 +1220,19 @@ const Cafe = (function(){
     sched = setInterval(()=>{
       const now = ctx.currentTime;
       const rain = L.rain.gain.value, cafe = L.cafe.gain.value, fire = L.fire.gain.value;
+      const birdLvl = L.birds ? L.birds.gain.value : 0, bugLvl = L.bugs ? L.bugs.gain.value : 0;
+
+      // birdsong — phrases spaced further apart when quieter
+      if(birdLvl > 0.02 && now > nextBird){
+        chirp(birdLvl);
+        if(Math.random() < 0.3*birdLvl) setTimeout(()=> chirp(birdLvl*0.8), 180 + Math.random()*260);
+        nextBird = now + (0.6 + Math.random()*3.4) / (0.4 + birdLvl);
+      }
+      // crickets — a steady chorus of overlapping trills
+      if(bugLvl > 0.02 && now > nextBug){
+        cricket(bugLvl, (Math.random()*2-1)*0.7);
+        nextBug = now + (0.14 + Math.random()*0.5) / (0.5 + bugLvl);
+      }
 
       // rain impacts — the patter that makes it read as real rain
       if(rain > 0.02){
@@ -938,11 +1310,14 @@ const Cafe = (function(){
 })();
 
 const LAYERS = [
-  {id:'rain',  name:'Rain on glass'},
-  {id:'cafe',  name:'Café murmur'},
-  {id:'fire',  name:'Fireplace'},
-  {id:'noise', name:'Soft noise'},
-  {id:'hum',   name:'Warm hum'}
+  {id:'rain',   name:'Rain on glass'},
+  {id:'cafe',   name:'Café murmur'},
+  {id:'fire',   name:'Fireplace'},
+  {id:'leaves', name:'Leaves & wind'},
+  {id:'birds',  name:'Birdsong'},
+  {id:'bugs',   name:'Crickets'},
+  {id:'noise',  name:'Soft noise'},
+  {id:'hum',    name:'Warm hum'}
 ];
 const PRESETS = {
   rain:  {rain:.52, cafe:.20, fire:0,   noise:0,   hum:.12},
@@ -989,7 +1364,7 @@ document.getElementById('presets').addEventListener('click', async e=>{
   const btn = e.target.closest('[data-preset]'); if(!btn) return;
   await Cafe.start();
   const p = PRESETS[btn.dataset.preset];
-  Object.keys(p).forEach(k => applyLevel(k, p[k]));
+  LAYERS.forEach(l => applyLevel(l.id, p[l.id] || 0));
   [...document.querySelectorAll('#presets .chip')].forEach(c => c.setAttribute('aria-pressed', c === btn));
   reflectSound();
 });
@@ -1051,8 +1426,9 @@ async function startPhase(next){
   el.start.textContent = 'Pause';
   el.boardSub.textContent = next === 'focus' ? 'do not disturb' : 'back in a bit';
   if(next === 'focus' && !anySound()){
-    Object.keys(PRESETS.rain).forEach(k => applyLevel(k, PRESETS.rain[k]));
-    document.querySelector('[data-preset="rain"]').setAttribute('aria-pressed', true);
+    const mix = MODE_MIX[sceneMode];
+    LAYERS.forEach(l => applyLevel(l.id, mix[l.id] || 0));
+    [...document.querySelectorAll('#presets .chip')].forEach(c => c.setAttribute('aria-pressed', false));
     reflectSound();
   }
   run(); paint();
