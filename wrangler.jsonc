@@ -1,0 +1,11 @@
+{
+  // Deploys studybuddy as a static-asset Worker: index.html (and its
+  // sibling files) are served directly. Used by the "npx wrangler deploy"
+  // build command configured in the Cloudflare dashboard.
+  "name": "studybuddy",
+  "compatibility_date": "2026-08-10",
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "single-page-application"
+  }
+}
