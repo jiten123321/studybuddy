@@ -638,7 +638,7 @@ document.getElementById('modes').addEventListener('click', e=>{
 
 /* hide the floating controls after 2 min idle; any activity brings them back */
 (function(){
-  let idleT, last = 0; const IDLE_MS = 120000;
+  let idleT, last = 0; const IDLE_MS = 4000;
   function active(){
     if(document.body.classList.contains('idle')) document.body.classList.remove('idle');
     const t = performance.now();
