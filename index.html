@@ -950,6 +950,7 @@ const Cafe = (function(){
     async start(){
       if(!started){ build(); started = true; }
       if(ctx.state === 'suspended') await ctx.resume();
+      ['sndRain','sndBirds','sndJungle'].forEach(id=>{ const el=document.getElementById(id); if(el && el.paused) el.play().catch(()=>{}); });
     },
     set(name, v){ if(started && L[name]) L[name].gain.setTargetAtTime(v, ctx.currentTime, 0.02); },
     setMaster(v){ if(started) master.gain.setTargetAtTime(v, ctx.currentTime, 0.15); },
@@ -1242,6 +1243,22 @@ document.addEventListener('keydown', e=>{
     g.innerHTML = 'Good evening, <em>Ladoo</em>.';
     t.textContent = 'Corner table, rain outside, your laptop. Pick a length and press start.';
   }
+})();
+/* Rain should be playing as soon as possible. Browsers block audio autoplay
+   until a gesture, so try on load and also start on the first interaction. */
+(function(){
+  function begin(){
+    Cafe.start().catch(()=>{});                  // builds graph now, resumes on gesture
+    const mix = MODE_MIX[sceneMode] || {};
+    LAYERS.forEach(l => applyLevel(l.id, mix[l.id] || 0));   // prime rain so it plays the instant audio unlocks
+    reflectSound();
+  }
+  begin();                                       // best-effort autoplay on load
+  const unlock = () => {                          // guaranteed on first real interaction
+    begin();
+    ['pointerdown','keydown','touchstart'].forEach(ev => removeEventListener(ev, unlock));
+  };
+  ['pointerdown','keydown','touchstart'].forEach(ev => addEventListener(ev, unlock, {passive:true}));
 })();
 </script>
 </body>
