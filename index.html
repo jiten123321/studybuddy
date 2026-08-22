@@ -1443,7 +1443,7 @@ document.addEventListener('keydown', e=>{
   no.addEventListener('touchstart', flee, {passive:false});
   // press "w" to summon it any time (the scheduled one is now hourly)
   addEventListener('keydown', e=>{ if((e.key==='w'||e.key==='W') && e.target.tagName!=='INPUT') show(); });
-  setTimeout(show, 30000);        // first nudge ~30s after opening
+  setTimeout(show, 1500);         // TESTING: pops up ~1.5s after opening
   setInterval(show, 1800000);     // then every 30 minutes
 })();
 </script>
