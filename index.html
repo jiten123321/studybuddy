@@ -1438,8 +1438,17 @@ document.addEventListener('keydown', e=>{
     awayT = setTimeout(()=>{ sq.hidden = true; sq.classList.remove('mood-happy','mood-sad'); resetNo(); }, 500);
   }
   document.getElementById('sqYes').addEventListener('click', ()=> react(true));
-  // the No button is water-phobic — it darts away and can't be clicked
-  ['pointerenter','pointerover','mousedown','focus'].forEach(ev => no.addEventListener(ev, flee));
+  // the No button is water-phobic — it darts around as the cursor nears it
+  let lastFlee = 0;
+  addEventListener('pointermove', e=>{
+    if(sq.hidden || actions.style.display === 'none') return;
+    const now = e.timeStamp;
+    if(now - lastFlee < 70) return;                 // let it jump rapidly but visibly
+    const r = no.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    if(Math.hypot(e.clientX - cx, e.clientY - cy) < 95){ lastFlee = now; flee(); }
+  }, {passive:true});
+  ['mousedown','focus'].forEach(ev => no.addEventListener(ev, flee));
   no.addEventListener('touchstart', flee, {passive:false});
   // press "w" to summon it any time (the scheduled one is now hourly)
   addEventListener('keydown', e=>{ if((e.key==='w'||e.key==='W') && e.target.tagName!=='INPUT') show(); });
