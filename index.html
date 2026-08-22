@@ -1041,6 +1041,10 @@ const Cafe = (function(){
       notes.forEach((f,i)=>{
         setTimeout(()=> ping({ f, vol: 0.13, dur: 2.6, p: (i-1)*0.3, send: 0.7 }), i*260);
       });
+    },
+    notify(){
+      if(!started) return;
+      [880, 1320].forEach((f,i)=> setTimeout(()=> ping({ f, vol: 0.08, dur: 0.5, p: 0, send: 0.4 }), i*130));
     }
   };
 })();
@@ -1347,22 +1351,36 @@ document.addEventListener('keydown', e=>{
   if(!sq) return;
   const txt = document.getElementById('sqText'), actions = document.getElementById('sqActions');
   const corners = ['corner-tl','corner-tr','corner-bl','corner-br'];
+  const PROMPTS = [
+    'Hey Ladoo — time for a sip of water? 💧',
+    'Water break, Ladoo? Just a few sips 💧',
+    'Psst… hydrate a little? Your brain will thank you 💧',
+    'Quick stretch and some water? 🙆💧',
+    'Rest your eyes for a moment, then a sip? 👀💧',
+    'Something warm — a cup of tea or water? 🍵',
+    'Shoulders down, deep breath, and a drink? 🌿💧'
+  ];
+  const HAPPY = ['Yay! Stay hydrated, Ladoo 💚','Good job! Your body thanks you 💚','That\u2019s my Ladoo 🥰💧'];
+  const SAD   = ['Aww\u2026 just a little sip? 🥺💧','Okay\u2026 I\u2019ll ask again later 🥺','Pretty please? For me? 🥹💧'];
+  const pick = a => a[Math.floor(Math.random()*a.length)];
   let hideT, awayT;
   function show(){
+    if(sq.classList.contains('show') && !sq.hidden) return;      // already on screen
     clearTimeout(hideT); clearTimeout(awayT);
     sq.classList.remove('mood-happy','mood-sad', ...corners);
     sq.classList.add(corners[Math.floor(Math.random()*corners.length)]);
-    txt.textContent = 'Hey Ladoo — time for a sip of water? 💧';
+    txt.textContent = pick(PROMPTS);
     actions.style.display = '';
     sq.hidden = false;
     requestAnimationFrame(()=> requestAnimationFrame(()=> sq.classList.add('show')));
+    try{ Cafe.notify(); }catch(e){}                              // soft chime
     hideT = setTimeout(hide, 30000);        // leaves on its own if ignored
   }
   function react(happy){
     clearTimeout(hideT);
     sq.classList.toggle('mood-happy', happy);
     sq.classList.toggle('mood-sad', !happy);
-    txt.textContent = happy ? 'Yay! You stayed hydrated 💚' : 'Aww… just a little sip? 🥺💧';
+    txt.textContent = happy ? pick(HAPPY) : pick(SAD);
     actions.style.display = 'none';
     hideT = setTimeout(hide, 3800);
   }
@@ -1373,8 +1391,9 @@ document.addEventListener('keydown', e=>{
   }
   document.getElementById('sqYes').addEventListener('click', ()=> react(true));
   document.getElementById('sqNo').addEventListener('click', ()=> react(false));
-  setTimeout(show, 20000);        // first nudge ~20s after opening (so it's visible)
-  setInterval(show, 3600000);     // then every hour
+  // press "w" to summon it any time (the scheduled one is now hourly)
+  addEventListener('keydown', e=>{ if((e.key==='w'||e.key==='W') && e.target.tagName!=='INPUT') show(); });
+  setInterval(show, 3600000);     // first appearance after 1 hour, then every hour
 })();
 </script>
 </body>
