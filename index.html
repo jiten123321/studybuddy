@@ -1488,10 +1488,13 @@ document.addEventListener('keydown', e=>{
   no.addEventListener('touchstart', flee, {passive:false});
   // press "w" to summon it any time (the scheduled one is now hourly)
   addEventListener('keydown', e=>{ if((e.key==='w'||e.key==='W') && e.target.tagName!=='INPUT') show(); });
-  // Do NOT pop up on launch — first reminder comes one hour after opening,
-  // then repeats every hour. (Press "w" to summon it any time.)
+  // TESTING: pop up ~2s after opening so it's easy to see. Remove this line
+  // to go back to launch-quiet behaviour.
+  setTimeout(show, 2000);
+  // Scheduled reminder: first fires one hour after opening, then every hour.
+  // (Press "w" to summon it any time.)
   const HOUR = 3600000;
-  setInterval(show, HOUR);        // first fires at +1h, then every hour
+  setInterval(show, HOUR);
 })();
 </script>
 </body>
