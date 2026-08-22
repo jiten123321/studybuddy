@@ -196,6 +196,32 @@ body.mode-jungle .sill{background:linear-gradient(180deg,#0f2418 0%,#0a1a11 40%,
 .modes,.scenes,.fsbtn{transition:opacity .35s ease}
 body.idle .modes,body.idle .scenes,body.idle .fsbtn{opacity:0;pointer-events:none}
 body.idle{cursor:none}
+/* ── Squirrel water reminder ── */
+.squirrel{position:fixed;z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;
+  pointer-events:none;opacity:0;transform:scale(.82);transition:opacity .4s ease, transform .45s cubic-bezier(.2,.9,.3,1.5);
+  font-family:var(--body)}
+.squirrel[hidden]{display:none}
+.squirrel.show{opacity:1;transform:none}
+.squirrel.corner-tl{top:18px;left:18px;align-items:flex-start;flex-direction:column-reverse;transform-origin:top left}
+.squirrel.corner-tr{top:18px;right:18px;align-items:flex-end;flex-direction:column-reverse;transform-origin:top right}
+.squirrel.corner-bl{bottom:18px;left:18px;align-items:flex-start;transform-origin:bottom left}
+.squirrel.corner-br{bottom:18px;right:18px;align-items:flex-end;transform-origin:bottom right}
+.sq-bubble{pointer-events:auto;max-width:232px;background:linear-gradient(180deg,#fffdf8,#f3ead9);
+  color:#2b1f16;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:12px 14px;
+  box-shadow:0 16px 36px rgba(0,0,0,.30)}
+.sq-bubble p{margin:0 0 9px;font-size:13.5px;line-height:1.4}
+.sq-actions{display:flex;gap:8px}
+.sq-actions button{flex:1;padding:7px 10px;border-radius:10px;cursor:pointer;font-family:var(--body);
+  font-size:12.5px;border:1px solid transparent;transition:.15s}
+.sq-yes{background:#5bbf6a;color:#fff}.sq-yes:hover{background:#4aa85a}
+.sq-no{background:rgba(0,0,0,.06);color:#5a4a3a}.sq-no:hover{background:rgba(0,0,0,.12)}
+.sq-art{width:116px;height:auto;display:block;filter:drop-shadow(0 8px 14px rgba(0,0,0,.32));
+  animation:sqbob 2.6s ease-in-out infinite}
+@keyframes sqbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.squirrel .m-happy,.squirrel .m-sad{display:none}
+.squirrel.mood-happy .m-neutral{display:none}.squirrel.mood-happy .m-happy{display:inline}
+.squirrel.mood-sad .m-neutral{display:none}.squirrel.mood-sad .m-sad{display:inline}
+@media(prefers-reduced-motion:reduce){.sq-art{animation:none}}
 body.solo{overflow:hidden}
 body.solo .shell{grid-template-columns:1fr;height:100dvh}
 body.solo .panel{display:none}
@@ -326,6 +352,61 @@ body.zen .shell{grid-template-columns:1.95fr .75fr}
 <audio id="sndRain"   loop preload="auto" src="dragon-studio-relaxing-rain-444802.mp3"></audio>
 <audio id="sndBirds"  loop preload="auto" src="wr-sound-library-bird-soundchirping-light-no-copyright-550314.mp3"></audio>
 <audio id="sndJungle" loop preload="auto" src="soundreality-nature-forest-sound-537925.mp3"></audio>
+
+<!-- ── Squirrel water reminder ── -->
+<div class="squirrel" id="squirrel" hidden aria-live="polite">
+  <div class="sq-bubble">
+    <p id="sqText">Hey Ladoo — time for a sip of water? 💧</p>
+    <div class="sq-actions" id="sqActions">
+      <button class="sq-yes" id="sqYes" type="button">Yes 💚</button>
+      <button class="sq-no"  id="sqNo"  type="button">Not now</button>
+    </div>
+  </div>
+  <svg class="sq-art" viewBox="0 0 140 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M96 128 C142 126 140 58 104 44 C128 60 122 104 90 108 Z" fill="#bd7f42"/>
+    <path d="M99 120 C128 118 128 70 106 56 C120 72 114 100 92 102 Z" fill="#d9a869"/>
+    <ellipse cx="64" cy="104" rx="30" ry="34" fill="#a9682f"/>
+    <ellipse cx="62" cy="110" rx="19" ry="24" fill="#f2ddbe"/>
+    <ellipse cx="48" cy="135" rx="9" ry="6" fill="#8a5324"/>
+    <ellipse cx="80" cy="135" rx="9" ry="6" fill="#8a5324"/>
+    <circle cx="62" cy="56" r="31" fill="#b06f33"/>
+    <path d="M40 32 C34 12 46 8 52 26 Z" fill="#a9682f"/>
+    <path d="M84 32 C90 12 78 8 72 26 Z" fill="#a9682f"/>
+    <path d="M42 30 C39 19 45 17 49 27 Z" fill="#e59fb0"/>
+    <path d="M82 30 C85 19 79 17 75 27 Z" fill="#e59fb0"/>
+    <ellipse cx="62" cy="66" rx="17" ry="13" fill="#f2ddbe"/>
+    <ellipse cx="42" cy="62" rx="7" ry="4.5" fill="#f2a7a3" opacity=".8"/>
+    <ellipse cx="82" cy="62" rx="7" ry="4.5" fill="#f2a7a3" opacity=".8"/>
+    <ellipse cx="62" cy="60" rx="4.2" ry="3.2" fill="#4a2e1e"/>
+    <path d="M62 63 v4" stroke="#4a2e1e" stroke-width="1.6" stroke-linecap="round"/>
+    <g class="m-neutral">
+      <ellipse cx="50" cy="50" rx="4.6" ry="5.6" fill="#2a1a12"/>
+      <ellipse cx="74" cy="50" rx="4.6" ry="5.6" fill="#2a1a12"/>
+      <circle cx="51.6" cy="48" r="1.5" fill="#fff"/>
+      <circle cx="75.6" cy="48" r="1.5" fill="#fff"/>
+      <path d="M56 70 q6 4 12 0" stroke="#5a3a22" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </g>
+    <g class="m-happy">
+      <path d="M45 50 q5 -6 10 0" stroke="#2a1a12" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M69 50 q5 -6 10 0" stroke="#2a1a12" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M52 68 q10 10 20 0" stroke="#5a3a22" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    </g>
+    <g class="m-sad">
+      <ellipse cx="50" cy="52" rx="4.4" ry="5.4" fill="#2a1a12"/>
+      <ellipse cx="74" cy="52" rx="4.4" ry="5.4" fill="#2a1a12"/>
+      <circle cx="51.4" cy="50.4" r="1.3" fill="#fff"/>
+      <circle cx="75.4" cy="50.4" r="1.3" fill="#fff"/>
+      <path d="M44 44 q6 -3 11 1"  stroke="#5a3a22" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M69 45 q5 -4 11 -1" stroke="#5a3a22" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M54 72 q8 -6 16 0"  stroke="#5a3a22" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="80" cy="60" rx="3" ry="4.6" fill="#7ec8f0" opacity=".9"/>
+    </g>
+    <path d="M62 96 c9 10 9 20 0 25 c-9 -5 -9 -15 0 -25 Z" fill="#7ec8f0"/>
+    <path d="M62 104 c4 4 4 9 0 12" stroke="#bfe6fb" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="50" cy="118" rx="8" ry="6" fill="#b06f33"/>
+    <ellipse cx="74" cy="118" rx="8" ry="6" fill="#b06f33"/>
+  </svg>
+</div>
 
 <div class="shell">
 
@@ -1259,6 +1340,41 @@ document.addEventListener('keydown', e=>{
     ['pointerdown','keydown','touchstart'].forEach(ev => removeEventListener(ev, unlock));
   };
   ['pointerdown','keydown','touchstart'].forEach(ev => addEventListener(ev, unlock, {passive:true}));
+})();
+/* ── Squirrel water reminder: pops from a random corner every hour ── */
+(function(){
+  const sq = document.getElementById('squirrel');
+  if(!sq) return;
+  const txt = document.getElementById('sqText'), actions = document.getElementById('sqActions');
+  const corners = ['corner-tl','corner-tr','corner-bl','corner-br'];
+  let hideT, awayT;
+  function show(){
+    clearTimeout(hideT); clearTimeout(awayT);
+    sq.classList.remove('mood-happy','mood-sad', ...corners);
+    sq.classList.add(corners[Math.floor(Math.random()*corners.length)]);
+    txt.textContent = 'Hey Ladoo — time for a sip of water? 💧';
+    actions.style.display = '';
+    sq.hidden = false;
+    requestAnimationFrame(()=> requestAnimationFrame(()=> sq.classList.add('show')));
+    hideT = setTimeout(hide, 30000);        // leaves on its own if ignored
+  }
+  function react(happy){
+    clearTimeout(hideT);
+    sq.classList.toggle('mood-happy', happy);
+    sq.classList.toggle('mood-sad', !happy);
+    txt.textContent = happy ? 'Yay! You stayed hydrated 💚' : 'Aww… just a little sip? 🥺💧';
+    actions.style.display = 'none';
+    hideT = setTimeout(hide, 3800);
+  }
+  function hide(){
+    clearTimeout(hideT);
+    sq.classList.remove('show');
+    awayT = setTimeout(()=>{ sq.hidden = true; sq.classList.remove('mood-happy','mood-sad'); }, 500);
+  }
+  document.getElementById('sqYes').addEventListener('click', ()=> react(true));
+  document.getElementById('sqNo').addEventListener('click', ()=> react(false));
+  setTimeout(show, 20000);        // first nudge ~20s after opening (so it's visible)
+  setInterval(show, 3600000);     // then every hour
 })();
 </script>
 </body>
